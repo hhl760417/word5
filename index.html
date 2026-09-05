@@ -193,11 +193,10 @@
   .status .scope-tag { color: var(--accent); font-weight:600; background: var(--accent-soft); padding: 1px 8px; border-radius: 10px; font-size: 11px; }
   .status .warn { color: #d97706; }
 
-  /* ===== Main 3-column ===== */
+  /* ===== Main ===== */
   main {
     flex: 1;
     display: grid;
-    grid-template-columns: minmax(170px, 1fr) minmax(300px, 1.8fr) minmax(170px, 1fr);
     gap: 12px;
     padding: 12px;
     overflow: hidden;
@@ -484,54 +483,22 @@
     margin-bottom: -6px;
   }
 
-  /* ===== Mobile responsive ===== */
-  /* Mobile portrait: stack 3 rows */
-  @media (max-width: 980px) and (orientation: portrait) {
-    header { padding: 8px 12px; gap: 8px; }
-    .logo { font-size: 15px; }
-    .logo small { display: none; }
-    .settings-btn { display: flex; }
-    .status { font-size: 11px; flex: 1; margin: 0; text-align: right; }
-    main {
-      grid-template-columns: 1fr !important;
-      grid-template-rows: minmax(120px, 0.8fr) minmax(300px, 1.4fr) minmax(120px, 0.8fr);
-      gap: 8px; padding: 8px;
-    }
-    .word-display { font-size: 28px; letter-spacing: 1px; }
-    .word-stage { padding: 12px 8px 8px; }
-    .word-controls { gap: 10px; margin-bottom: 8px; }
-    .btn-nav, .btn-speak { width: 34px; height: 34px; font-size: 16px; }
-    .details { padding: 10px; }
-    .word-list-item { font-size: 13px; padding: 6px 8px; }
-    .word-list-item .tran { font-size: 11px; max-width: 42%; }
-    .col-head { padding: 8px 10px; font-size: 12px; }
-    .prefix-hint { font-size: 11px; padding: 4px 8px; }
-  }
-  /* Mobile landscape: keep 3 columns but compact */
-  @media (max-width: 980px) and (orientation: landscape) {
-    header { padding: 6px 10px; gap: 8px; }
-    .logo { font-size: 14px; }
-    .logo small { display: none; }
-    .settings-btn { display: flex; width: 34px; height: 34px; font-size: 16px; }
-    .status { font-size: 11px; flex: 1; margin: 0; text-align: right; }
-    main {
-      grid-template-columns: repeat(3, minmax(100px, 1fr)) !important;
-      gap: 8px; padding: 8px;
-    }
-    .word-display { font-size: 24px; letter-spacing: 1px; min-height: 38px; }
-    .word-stage { padding: 8px 6px 6px; }
-    .word-controls { gap: 10px; margin-bottom: 6px; }
-    .btn-nav, .btn-speak { width: 32px; height: 32px; font-size: 14px; }
-    .details { padding: 8px; }
-    .word-list-item { font-size: 12px; padding: 5px 6px; gap: 4px; }
-    .word-list-item .tran { font-size: 10px; max-width: 40%; }
-    .col-head { padding: 6px 8px; font-size: 11px; }
-    .prefix-hint { font-size: 10px; padding: 3px 6px; }
-    .detail-section { margin-bottom: 10px; }
-    .detail-section h4 { font-size: 12px; }
-  }
-  /* Desktop: drawer becomes inline toolbar inside header */
+  /* ===== Desktop (min-width: 981px): 三栏模式 ===== */
   @media (min-width: 981px) {
+    main {
+      grid-template-columns: minmax(170px, 1fr) minmax(300px, 1.8fr) minmax(170px, 1fr) !important;
+    }
+    /* 将 Tab 容器打散，使里面的 left, middle, right 顺畅平铺成三栏 */
+    .side-tabs-col {
+      display: contents !important;
+    }
+    .side-tabs-header {
+      display: none !important;
+    }
+    .col.left { grid-column: 1; grid-row: 1; }
+    .col.middle { grid-column: 2; grid-row: 1; }
+    .col.right { grid-column: 3; grid-row: 1; }
+
     .drawer-backdrop { display: none !important; }
     .settings-btn { display: none !important; }
     .drawer {
@@ -565,6 +532,119 @@
     }
     .drawer .sel { min-width: 110px; width: auto; }
     .drawer .unit-filter-toggle { justify-content: flex-start; }
+  }
+
+  /* ===== Mobile Shared Styles (Tab Container) ===== */
+  @media (max-width: 980px) {
+    header { padding: 8px 12px; gap: 8px; }
+    .logo { font-size: 15px; }
+    .logo small { display: none; }
+    .settings-btn { display: flex; }
+    .status { font-size: 11px; flex: 1; margin: 0; text-align: right; }
+
+    .side-tabs-col {
+      display: flex;
+      flex-direction: column;
+      background: var(--panel);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      min-height: 0;
+    }
+    .side-tabs-header {
+      display: flex;
+      background: #f1f5f9;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .side-tabs-header .tab-btn {
+      flex: 1;
+      padding: 8px 4px;
+      border: none;
+      background: transparent;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all .15s;
+      border-bottom: 2px solid transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+    .side-tabs-header .tab-btn.active {
+      background: var(--panel);
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    .side-tabs-header .tab-btn.btn-prefix.active { color: var(--left-color); border-bottom-color: var(--left-color); }
+    .side-tabs-header .tab-btn.btn-suffix.active { color: var(--right-color); border-bottom-color: var(--right-color); }
+    
+    .side-tabs-col .col {
+      border: none !important;
+      box-shadow: none !important;
+      border-radius: 0 !important;
+      height: 100%;
+    }
+
+    /* Tab Switch visibility */
+    .side-tabs-col.active-prefix .col.right { display: none !important; }
+    .side-tabs-col.active-prefix .col.left { display: flex !important; }
+
+    .side-tabs-col.active-suffix .col.left { display: none !important; }
+    .side-tabs-col.active-suffix .col.right { display: flex !important; }
+  }
+
+  /* ===== Mobile Portrait (竖屏) ===== */
+  @media (max-width: 980px) and (orientation: portrait) {
+    main {
+      grid-template-columns: 1fr !important;
+      grid-template-rows: minmax(260px, 1.4fr) minmax(180px, 1fr) !important;
+      gap: 8px; padding: 8px;
+    }
+    .col.middle { grid-row: 1; }
+    .side-tabs-col { grid-row: 2; }
+
+    .word-display { font-size: 28px; letter-spacing: 1px; }
+    .word-stage { padding: 12px 8px 8px; }
+    .word-controls { gap: 10px; margin-bottom: 8px; }
+    .btn-nav, .btn-speak { width: 34px; height: 34px; font-size: 16px; }
+    .details { padding: 10px; }
+    .word-list-item { font-size: 13px; padding: 6px 8px; }
+    .word-list-item .tran { font-size: 11px; max-width: 42%; }
+    .col-head { padding: 8px 10px; font-size: 12px; }
+    .prefix-hint { font-size: 11px; padding: 4px 8px; }
+  }
+
+  /* ===== Mobile Landscape (横屏: 中间栏放左边，合并后的 Tab 栏放右边) ===== */
+  @media (max-width: 980px) and (orientation: landscape) {
+    header { padding: 6px 10px; gap: 8px; }
+    .logo { font-size: 14px; }
+    .settings-btn { width: 34px; height: 34px; font-size: 16px; }
+    
+    main {
+      grid-template-columns: minmax(220px, 1.8fr) minmax(160px, 1.2fr) !important;
+      grid-template-rows: 1fr !important;
+      gap: 8px; padding: 8px;
+    }
+    
+    /* 中间栏在左，合并 Tab 栏在右 */
+    .col.middle { grid-column: 1; grid-row: 1; }
+    .side-tabs-col { grid-column: 2; grid-row: 1; }
+
+    .word-display { font-size: 24px; letter-spacing: 1px; min-height: 38px; }
+    .word-stage { padding: 8px 6px 6px; }
+    .word-controls { gap: 10px; margin-bottom: 6px; }
+    .btn-nav, .btn-speak { width: 32px; height: 32px; font-size: 14px; }
+    .details { padding: 8px; }
+    .word-list-item { font-size: 12px; padding: 5px 6px; gap: 4px; }
+    .word-list-item .tran { font-size: 10px; max-width: 40%; }
+    .col-head { padding: 6px 8px; font-size: 11px; }
+    .prefix-hint { font-size: 10px; padding: 3px 6px; }
+    .detail-section { margin-bottom: 10px; }
+    .detail-section h4 { font-size: 12px; }
   }
 </style>
 </head>
@@ -606,20 +686,7 @@
   </header>
 
   <main>
-    <!-- Left column -->
-    <section class="col left">
-      <div class="col-head">
-        <span class="dot"></span>
-        左侧前缀匹配
-        <span class="count" id="leftCount">0</span>
-      </div>
-      <div class="prefix-hint" id="leftHint">点击单词字母，从整个词库检索以「光标左侧字母」为前缀的单词；点击列表项可预览</div>
-      <div class="col-body" id="leftList">
-        <div class="empty"><div class="big">⬅️</div>加载词库后，点击中间单词的字母</div>
-      </div>
-    </section>
-
-    <!-- Middle column -->
+    <!-- Middle column (手机横屏下在左边) -->
     <section class="col middle">
       <div class="word-stage">
         <div class="word-controls">
@@ -636,18 +703,39 @@
       </div>
     </section>
 
-    <!-- Right column -->
-    <section class="col right">
-      <div class="col-head">
-        <span class="dot"></span>
-        右侧后缀匹配
-        <span class="count" id="rightCount">0</span>
+    <!-- Side Tabs Container (手机横屏下合并放在右边，带 Tab 切换) -->
+    <div class="side-tabs-col active-prefix" id="sideTabsCol">
+      <div class="side-tabs-header">
+        <button class="tab-btn btn-prefix active" data-tab="prefix">⬅️ 前缀匹配 (<span id="tabLeftCount">0</span>)</button>
+        <button class="tab-btn btn-suffix" data-tab="suffix">➡️ 后缀匹配 (<span id="tabRightCount">0</span>)</button>
       </div>
-      <div class="prefix-hint" id="rightHint">点击单词字母，从整个词库检索以「光标右侧字母」为后缀的单词；点击列表项可预览</div>
-      <div class="col-body" id="rightList">
-        <div class="empty"><div class="big">➡️</div>加载词库后，点击中间单词的字母</div>
-      </div>
-    </section>
+
+      <!-- Left column -->
+      <section class="col left">
+        <div class="col-head">
+          <span class="dot"></span>
+          左侧前缀匹配
+          <span class="count" id="leftCount">0</span>
+        </div>
+        <div class="prefix-hint" id="leftHint">点击单词字母，从整个词库检索以「光标左侧字母」为前缀的单词；点击列表项可预览</div>
+        <div class="col-body" id="leftList">
+          <div class="empty"><div class="big">⬅️</div>加载词库后，点击中间单词的字母</div>
+        </div>
+      </section>
+
+      <!-- Right column -->
+      <section class="col right">
+        <div class="col-head">
+          <span class="dot"></span>
+          右侧后缀匹配
+          <span class="count" id="rightCount">0</span>
+        </div>
+        <div class="prefix-hint" id="rightHint">点击单词字母，从整个词库检索以「光标右侧字母」为后缀的单词；点击列表项可预览</div>
+        <div class="col-body" id="rightList">
+          <div class="empty"><div class="big">➡️</div>加载词库后，点击中间单词的字母</div>
+        </div>
+      </section>
+    </div>
   </main>
 
   <!-- Placeholder overlay -->
@@ -674,14 +762,12 @@
   let pos = -1;             // current position in orderList
   let mode = "order";       // "order" | "random"
   let cursorIdx = -1;       // clicked char index in current word
-  // preview state: when >=0, center column temporarily shows rawVocab[previewIdx]
-  // (set by clicking a left/right list item). Any prev/next/filter change resets it.
   let previewIdx = -1;
 
-  // ===== IndexedDB cache (large vocab files exceed localStorage's ~5MB limit) =====
+  // ===== IndexedDB cache =====
   const IDB_NAME = "vocab-browser";
   const IDB_VER = 1;
-  const IDB_STORE = "vocabFiles";   // key=filename, value={name, data, size, ts}
+  const IDB_STORE = "vocabFiles";
   let _idb = null;
   function openDB(){
     if(_idb) return Promise.resolve(_idb);
@@ -704,7 +790,7 @@
         tx.oncomplete = ()=> resolve();
         tx.onerror = ()=> reject(tx.error);
       });
-    }catch(e){ /* IndexedDB unavailable (private mode) — skip caching */ }
+    }catch(e){}
   }
   async function idbGet(key){
     try {
@@ -717,52 +803,24 @@
       });
     }catch(e){ return null; }
   }
-  async function idbKeys(){
-    try {
-      const db = await openDB();
-      return new Promise((resolve, reject)=>{
-        const tx = db.transaction(IDB_STORE, "readonly");
-        const req = tx.objectStore(IDB_STORE).getAllKeys();
-        req.onsuccess = ()=> resolve(req.result);
-        req.onerror = ()=> reject(req.error);
-      });
-    }catch(e){ return []; }
-  }
-  async function idbDelete(key){
-    try {
-      const db = await openDB();
-      return new Promise((resolve, reject)=>{
-        const tx = db.transaction(IDB_STORE, "readwrite");
-        tx.objectStore(IDB_STORE).delete(key);
-        tx.oncomplete = ()=> resolve();
-        tx.onerror = ()=> reject(tx.error);
-      });
-    }catch(e){}
-  }
 
   // localStorage keys for session restore
-  const LS_LAST_VOCAB   = "lastVocabFile";     // filename of last loaded vocab
-  const LS_LAST_GRADE   = "lastGrade";         // last selected grade id
-  const LS_LAST_UNIT    = "lastUnit";          // last selected unit index (within grade)
-  const LS_LAST_FILTER  = "lastFilterByUnit";  // "1" | "0"
-  // unit filter state
-  let filterByUnit = false; // toggle: true = filter by grade+unit, false = whole vocab
-  let currentUnitData = null;   // unit word list (qwerty-learner simplified format)
-  let currentUnitFile = null;   // unit filename, e.g. "PEPXiaoXue3_1_T.json"
-  let currentUnitLabel = "";   // human label, e.g. "小学3年级 · 上学期"
-  // in-active lookup (rebuilt whenever activeVocab changes):
-  //   activeHeadSet: lowercase headwords present in activeVocab (center column scope)
-  //   activeHeadToIdx: lowercase headword → activeVocab index (first occurrence)
-  // Left/right lists search rawVocab but tag each item as in/out of unit using these.
+  const LS_LAST_VOCAB   = "lastVocabFile";
+  const LS_LAST_GRADE   = "lastGrade";
+  const LS_LAST_UNIT    = "lastUnit";
+  const LS_LAST_FILTER  = "lastFilterByUnit";
+  
+  let filterByUnit = false;
+  let currentUnitData = null;
+  let currentUnitFile = null;
+  let currentUnitLabel = "";
+  
   let activeHeadSet = new Set();
   let activeHeadToIdx = Object.create(null);
 
-  // ===== Textbook catalog (人教版 PEP, covers 小学3年级→高三) =====
-  // Data source: RealKai42/qwerty-learner public/dicts/*.json (per-unit simplified vocab files)
-  // Loading priority: localStorage cache → local dicts/{file} → GitHub raw (online latest)
+  // ===== Textbook catalog =====
   const GH_RAW_BASE = "https://raw.githubusercontent.com/RealKai42/qwerty-learner/master/public/dicts/";
   const LS_PREFIX = "pep_unit:";
-  // each grade maps to a list of units [{file, name}]
   const CATALOG = [
     { id:"x3", label:"小学3年级", series:"PEPXiaoXue3",
       units:[ {f:"PEPXiaoXue3_1_T",n:"上学期"}, {f:"PEPXiaoXue3_2_T",n:"下学期"} ] },
@@ -782,7 +840,6 @@
       units:[1,2,3,4,5,6,7,8,9,10,11].map(n=>({f:`PEPGaoZhong_${n}_T`,n:`模块${n}`})) }
   ];
 
-  // populate grade dropdown
   function initGradeSelect(){
     const sel = $("gradeSelect");
     const groups = [
@@ -802,7 +859,7 @@
     sel.innerHTML = html;
     sel.value = "x3";
   }
-  // populate unit dropdown based on current grade
+
   function refreshUnitSelect(){
     const sel = $("unitSelect");
     const cat = CATALOG.find(c=>c.id===$("gradeSelect").value);
@@ -811,17 +868,14 @@
     sel.value = 0;
   }
 
-  // load unit file (cache → local → online)
   async function loadUnitFile(filename){
     const cacheKey = LS_PREFIX + filename;
-    // 1. localStorage cache
     try{
       const cached = localStorage.getItem(cacheKey);
       if(cached){
         try{ return JSON.parse(cached); }catch(e){ localStorage.removeItem(cacheKey); }
       }
     }catch(e){}
-    // 2. local dicts/ folder (same-origin fetch; works under file:// and http://)
     try{
       const r = await fetch("dicts/" + filename);
       if(r.ok){
@@ -829,7 +883,6 @@
         try{ const data = JSON.parse(text); cacheUnit(cacheKey, data); return data; }catch(e){}
       }
     }catch(e){}
-    // 3. online GitHub raw (latest)
     try{
       const r = await fetch(GH_RAW_BASE + filename);
       if(r.ok){
@@ -841,28 +894,22 @@
     return null;
   }
   function cacheUnit(key, data){
-    try{
-      // localStorage quota is small (~5MB); each unit file < 100KB, safe
-      localStorage.setItem(key, JSON.stringify(data));
-    }catch(e){ /* quota exceeded — skip caching, still works in-memory */ }
+    try{ localStorage.setItem(key, JSON.stringify(data)); }catch(e){}
   }
 
-  // build activeVocab: unit-filtered (matching full vocab entries + fallback stubs) or whole rawVocab
   function rebuildActiveVocab(){
     if(!filterByUnit || !currentUnitData || !currentUnitData.length){
       activeVocab = rawVocab;
     } else {
-      // index rawVocab by lowercase headword for fast lookup (keeps detailed fields: phrase/sentence/syno…)
       const byHead = Object.create(null);
       rawVocab.forEach(w=>{
         const h = getHead(w).toLowerCase();
-        if(h && !byHead[h]) byHead[h] = w;  // first occurrence wins
+        if(h && !byHead[h]) byHead[h] = w;
       });
       activeVocab = currentUnitData.map((uw,i)=>{
         const name = (uw.name||"").trim();
         const full = byHead[name.toLowerCase()];
-        if(full) return full;  // use full entry (with phrase/sentence/syno/relWord)
-        // fallback stub: build a vocab-shaped object from simplified unit data
+        if(full) return full;
         return {
           headWord: name,
           wordRank: i+1,
@@ -878,8 +925,6 @@
         };
       });
     }
-    // build in-active lookup maps so left/right list items can be tagged
-    // "in current unit" (clickable to jump) vs "out of unit" (greyed)
     activeHeadSet = new Set();
     activeHeadToIdx = Object.create(null);
     activeVocab.forEach((w,idx)=>{
@@ -892,24 +937,19 @@
     buildIndex();
     setMode(mode);
     pos = -1;
-    previewIdx = -1;       // reset preview when scope changes
+    previewIdx = -1;
     next();
     updateStatus();
   }
 
-  // sorted word index for prefix search: array of {w, idx}
   let sortedIndex = [];
-  // reversed-sorted index for suffix search: array of {rw(reversed), w, idx}
   let suffixIndex = [];
-  // lowercase headword → rawVocab index (first occurrence); for list-item highlight
   let rawHeadToIdx = Object.create(null);
 
   const $ = id => document.getElementById(id);
   const escapeHtml = s => String(s).replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 
-  // ===== Pronunciation (offline meSpeak primary, Web Speech fallback) =====
-  // meSpeak = espeak asm.js port, runs in-browser, no system voice needed.
-  // Voices: en/en-us (美), en/en-rp (英). Config + voices loaded via fetch.
+  // ===== Pronunciation =====
   let meSpeakReady = false;
   const meSpeakVoices = { "en/en-us": false, "en/en-rp": false };
   function initMeSpeak(){
@@ -928,7 +968,6 @@
       }).catch(()=>{});
     });
   }
-  // play WAV ArrayBuffer via AudioContext (most reliable; re-entrant)
   let _ac = null;
   function getAC(){
     const AC = window.AudioContext || window.webkitAudioContext;
@@ -947,9 +986,7 @@
       }).catch(()=>fb());
     }catch(e){ fb(); }
   }
-  // accent ('us'|'uk') -> meSpeak voice id
   function accentVoice(accent){ return accent==="uk" ? "en/en-rp" : "en/en-us"; }
-  // primary offline synth; returns true if played
   function speakWithMeSpeak(text, accent){
     if(!meSpeakReady) return false;
     if(typeof meSpeak.isConfigLoaded === "function" && !meSpeak.isConfigLoaded()) return false;
@@ -962,7 +999,6 @@
       return true;
     }catch(e){ return false; }
   }
-  // fallback Web Speech
   function speakWithWebSpeech(text, accent){
     if(!('speechSynthesis' in window) || !text) return false;
     try{
@@ -978,26 +1014,19 @@
       return true;
     }catch(e){ return false; }
   }
-  // Youdao online pronunciation (works under file:// since it's a plain <audio> GET, no fetch/CORS needed)
   let _youdaoAudio = null;
   function speakWithYoudao(text, accent){
     if(!text) return false;
     try{
-      // type=1 英音, type=2 美音 (matches current en-rp/en-us mapping)
       const type = accent === "uk" ? 1 : 2;
       const url = "https://dict.youdao.com/dictvoice?audio=" + encodeURIComponent(text) + "&type=" + type;
-      // reuse single Audio instance to avoid overlapping playback on rapid clicks
       if(_youdaoAudio){ try{ _youdaoAudio.pause(); }catch(e){} }
       _youdaoAudio = new Audio(url);
-      // fire-and-forget; user-gesture click satisfies autoplay policy
       const p = _youdaoAudio.play();
       if(p && typeof p.catch === "function") p.catch(()=>{});
       return true;
     }catch(e){ return false; }
   }
-  // public speak:
-  //   - file:// open → Youdao online first (offline engine can't load from file://)
-  //   - http(s) open → offline meSpeak first, Web Speech fallback, Youdao last-resort
   let _msgTimer = null;
   function speak(text, accent){
     text = (text||"").trim();
@@ -1023,10 +1052,9 @@
     if(_msgTimer) clearTimeout(_msgTimer);
     _msgTimer = setTimeout(()=>{ hint.textContent = hint.dataset.orig || ""; hint.style.color=""; delete hint.dataset.loading; }, 2000);
   }
-  // boot offline engine now (script tag above already loaded meSpeak)
   initMeSpeak();
 
-  // ===== Extract helpers (tolerant to field shape) =====
+  // ===== Extract helpers =====
   function getHead(w){ return (w && w.headWord) || (w && w.content && w.content.word && w.content.word.wordHead) || ""; }
   function getContent(w){
     try { return w.content.word.content; } catch(e){ return null; }
@@ -1068,7 +1096,6 @@
   function getRank(w){ return w.wordRank || 0; }
   function getBookId(w){ return w.bookId || ""; }
 
-  // part of speech: collect distinct pos from syno (word's own), fallback to relWord
   function getPos(w){
     const c = getContent(w);
     if(!c) return "";
@@ -1083,7 +1110,6 @@
     return "";
   }
 
-  // short translation for list view
   function shortTran(w){
     const t = getTrans(w);
     if(t.length) return t[0].cn;
@@ -1091,19 +1117,18 @@
   }
 
   // ===== Loading =====
-  // load parsed vocab data into the app (shared by file-load and cache-restore paths)
   function loadVocabData(data, filename){
     rawVocab = data;
     activeVocab = rawVocab;
     buildIndex();
-    setMode(mode); // rebuild orderList
+    setMode(mode);
     $("overlay").style.display = "none";
     $("loadBtn").textContent = "📂 " + (filename || "重新加载");
     $("searchInput").disabled = false;
     $("gradeSelect").disabled = false;
     $("unitSelect").disabled = false;
     updateStatus();
-    next(); // load first word
+    next();
   }
 
   function handleFile(file){
@@ -1114,11 +1139,9 @@
         const text = e.target.result;
         const data = JSON.parse(text);
         if(!Array.isArray(data)) throw new Error("词库根节点不是数组");
-        // cache the file content to IndexedDB (so refresh can restore without re-pick)
         await idbPut(file.name, { name: file.name, data: text, size: file.size, ts: Date.now() });
         localStorage.setItem(LS_LAST_VOCAB, file.name);
         loadVocabData(data, file.name);
-        // restore unit filter state if previously on
         await restoreUnitFilterState();
       } catch(err){
         alert("解析失败：" + err.message + "\n请确认文件为合法 JSON 词库数组。");
@@ -1128,10 +1151,6 @@
     reader.readAsText(file, "utf-8");
   }
 
-  // ===== Cache restore on page load =====
-  // 1. read last vocab filename from localStorage
-  // 2. fetch its cached content from IndexedDB
-  // 3. load it (skip file picker) + restore unit filter state
   async function restoreFromCache(){
     if(!("indexedDB" in window)) return false;
     const lastName = localStorage.getItem(LS_LAST_VOCAB);
@@ -1148,7 +1167,6 @@
     } catch(e){ return false; }
   }
 
-  // restore grade/unit/toggle state and re-apply unit filter if it was on
   async function restoreUnitFilterState(){
     const savedGrade = localStorage.getItem(LS_LAST_GRADE);
     const savedUnit  = localStorage.getItem(LS_LAST_UNIT);
@@ -1165,26 +1183,20 @@
     if(savedFilter === "1"){
       filterByUnit = true;
       $("unitFilterToggle").classList.add("on");
-      await applyUnitSelection(true);   // load unit file (cache → local → online) and rebuild
+      await applyUnitSelection(true);
     }
   }
 
-  // build sorted index for fast prefix search (based on activeVocab)
-  // build sorted index for prefix/suffix search.
-  // IMPORTANT: indexes are always built from the WHOLE rawVocab, so left/right
-  // lists always search across the entire vocabulary regardless of unit filter.
-  // The unit filter only restricts which words appear in the center column.
   function buildIndex(){
     sortedIndex = rawVocab.map((w,idx)=>({ w: getHead(w).toLowerCase(), idx })).filter(x=>x.w);
     sortedIndex.sort((a,b)=> a.w.localeCompare(b.w));
-    // suffix index: sort by reversed string so suffix search = prefix search on reversed
+
     suffixIndex = rawVocab.map((w,idx)=>{
       const w0 = getHead(w).toLowerCase();
       return { rw: w0.split("").reverse().join(""), w: w0, idx };
     }).filter(x=>x.w);
     suffixIndex.sort((a,b)=> a.rw.localeCompare(b.rw));
-    // headword → rawVocab index map (first occurrence wins), so the center column's
-    // current word can be located in the raw index for list-item highlighting.
+
     rawHeadToIdx = Object.create(null);
     rawVocab.forEach((w,idx)=>{
       const h = getHead(w).toLowerCase();
@@ -1192,11 +1204,9 @@
     });
   }
 
-  // prefix search returns array of indices
   function prefixSearch(prefix){
     if(!prefix){ return []; }
     prefix = prefix.toLowerCase();
-    // binary search lower bound
     const lo = lowerBound(sortedIndex, prefix, e => e.w);
     const res = [];
     for(let i=lo;i<sortedIndex.length;i++){
@@ -1205,7 +1215,6 @@
     }
     return res;
   }
-  // suffix search: words ENDING with `suffix`. Done via reversed index.
   function suffixSearch(suffix){
     if(!suffix){ return []; }
     const r = suffix.toLowerCase().split("").reverse().join("");
@@ -1217,7 +1226,6 @@
     }
     return res;
   }
-  // generic lower bound: first index where getVal(arr[i]) >= target
   function lowerBound(arr, target, getVal){
     let l=0, r=arr.length;
     while(l<r){
@@ -1239,7 +1247,6 @@
       $("reloadBtn").disabled = true;
     } else {
       orderList = activeVocab.map((_,i)=>i);
-      // Fisher-Yates shuffle
       for(let i=orderList.length-1;i>0;i--){
         const j = Math.floor(Math.random()*(i+1));
         [orderList[i],orderList[j]] = [orderList[j],orderList[i]];
@@ -1247,11 +1254,10 @@
       $("reloadBtn").disabled = false;
     }
     pos = -1;
-    previewIdx = -1;       // reshuffle/order change exits preview
+    previewIdx = -1;
   }
 
   function showCurrent(){
-    // preview mode (clicked a left/right list item): show that rawVocab word
     if(previewIdx>=0 && previewIdx<rawVocab.length){
       const w = rawVocab[previewIdx];
       renderWord(w, true);
@@ -1271,21 +1277,21 @@
 
   function next(){
     if(!orderList.length) return;
-    previewIdx = -1;            // exit preview; next/prev operate on the filtered scope
+    previewIdx = -1;
     pos++;
     if(pos>=orderList.length) pos = 0;
     showCurrent();
   }
   function prev(){
     if(!orderList.length) return;
-    previewIdx = -1;            // exit preview
+    previewIdx = -1;
     pos--;
     if(pos<0) pos = orderList.length-1;
     showCurrent();
   }
 
   // ===== Word search =====
-  let searchActiveIdx = -1;   // highlighted item in dropdown
+  let searchActiveIdx = -1;
   let searchResultsCache = [];
 
   function searchVocab(q){
@@ -1298,7 +1304,6 @@
       if(h.startsWith(q)) starts.push(i);
       else if(h.indexOf(q)>=0) contains.push(i);
     }
-    // prefix matches first (alphabetical), then contains (alphabetical)
     starts.sort((a,b)=> getHead(activeVocab[a]).toLowerCase().localeCompare(getHead(activeVocab[b]).toLowerCase()));
     contains.sort((a,b)=> getHead(activeVocab[a]).toLowerCase().localeCompare(getHead(activeVocab[b]).toLowerCase()));
     return starts.concat(contains).slice(0, 30);
@@ -1345,13 +1350,10 @@
 
   function jumpToVidx(vidx){
     if(vidx==null || vidx<0 || vidx>=activeVocab.length) return;
-    // find position of vidx inside current orderList
     let p = orderList.indexOf(vidx);
-    if(p<0){ // not in current order (shouldn't happen, orderList covers all)
-      p = 0;
-    }
+    if(p<0){ p = 0; }
     pos = p;
-    previewIdx = -1;       // search jump navigates within filtered scope; exit preview
+    previewIdx = -1;
     showCurrent();
     closeSearch();
     $("searchInput").value = getHead(activeVocab[vidx]);
@@ -1368,7 +1370,6 @@
   }
 
   // ===== Rendering =====
-  
   function renderWord(w, isPreview){
     const head = getHead(w);
     const disp = $("wordDisplay");
@@ -1394,7 +1395,6 @@
     $("speakBtn").disabled = !head;
     $("speakBtn").dataset.word = head;
   }
-  
 
   function setCursor(i){
     cursorIdx = i;
@@ -1404,10 +1404,7 @@
     renderPrefixLists();
   }
 
-  
   function renderPrefixLists(){
-    // in preview mode, lists search/highlight against the previewed word;
-    // otherwise against the current orderList position's word.
     const dispHead = previewIdx>=0 && previewIdx<rawVocab.length
       ? getHead(rawVocab[previewIdx])
       : getHead(activeVocab[orderList[pos]] || {});
@@ -1418,12 +1415,10 @@
       $("rightList").innerHTML = emptyList("点击字母");
       $("leftCount").textContent = "0";
       $("rightCount").textContent = "0";
+      $("tabLeftCount").textContent = "0";
+      $("tabRightCount").textContent = "0";
       return;
     }
-    
-  
-    // 左侧字母 = head[0 .. cursorIdx]  (含光标所在字母) -> 前缀匹配
-    // 右侧字母 = head[cursorIdx .. end] (含光标所在字母) -> 后缀匹配
     const leftPrefix = dispHead.substring(0, cursorIdx+1);
     const rightSuffix = dispHead.substring(cursorIdx);
     $("leftHint").innerHTML = `前缀 = <b>${escapeHtml(leftPrefix)}</b> （光标左侧字母，含当前字母）`;
@@ -1433,9 +1428,9 @@
     const rightIdxs = suffixSearch(rightSuffix);
     $("leftCount").textContent = leftIdxs.length;
     $("rightCount").textContent = rightIdxs.length;
+    $("tabLeftCount").textContent = leftIdxs.length;
+    $("tabRightCount").textContent = rightIdxs.length;
 
-    // map current center-column word to its rawVocab index for list highlighting.
-    // (stub words not in rawVocab get -1 → no item highlighted, which is correct.)
     const curIdx0 = rawHeadToIdx[dispHead.toLowerCase()];
     const curIdx = curIdx0===undefined ? -1 : curIdx0;
     $("leftList").innerHTML = renderList(leftIdxs, leftPrefix, curIdx, "left");
@@ -1452,7 +1447,6 @@
       const head = getHead(w);
       const tran = shortTran(w);
       const pos = getPos(w);
-      // highlight prefix portion
       const marked = highlightPrefix(head, prefix, side);
       const isCurrent = vidx===currentIdx;
       html += `<div class="word-list-item${isCurrent?" current":""}" data-vidx="${vidx}">
@@ -1465,7 +1459,6 @@
     return html;
   }
   function highlightPrefix(head, query, side){
-    // left: highlight leading prefix; right: highlight trailing suffix
     const qlen = query.length;
     if(qlen===0) return escapeHtml(head);
     if(qlen >= head.length) return `<mark>${escapeHtml(head)}</mark>`;
@@ -1495,11 +1488,9 @@
 
     let html = "";
 
-    // part of speech
     const pos = getPos(w);
     html += `<div class="detail-section"><h4><span class="icon">🏷️</span>词性</h4><div style="font-size:15px;">${pos?`<span class="pos-badge">${escapeHtml(pos)}</span>`:`<span class="pos-badge none">未标注</span>`}<span style="color:var(--text-muted);font-size:12px;">该单词在词库中标注的词性</span></div></div>`;
 
-    // phonetic
     if(phones.us || phones.uk){
       html += `<div class="detail-section"><h4><span class="icon">🔊</span>音标 <span style="font-size:11px;color:var(--text-muted);font-weight:400;text-transform:none;letter-spacing:0;">（点击发音：英=英式RP，美=美式）</span></h4><div class="phone-row">`;
       if(phones.uk) html += `<div class="phone-item phone-clickable" data-speak="${escapeHtml(head)}" data-accent="uk" title="点击英式发音"><span class="label">英</span><span class="val">/${escapeHtml(phones.uk)}/</span></div>`;
@@ -1507,7 +1498,6 @@
       html += `</div></div>`;
     }
 
-    // translation
     if(trans.length){
       html += `<div class="detail-section"><h4><span class="icon">📝</span>释义</h4><div class="trans-list">`;
       trans.forEach(t=>{
@@ -1518,7 +1508,6 @@
       html += `</div></div>`;
     }
 
-    // phrases
     if(phrases.length){
       html += `<div class="detail-section"><h4><span class="icon">🔗</span>常用短语</h4><div class="phrase-grid">`;
       phrases.forEach(p=>{
@@ -1527,7 +1516,6 @@
       html += `</div></div>`;
     }
 
-    // sentences
     if(sents.length){
       html += `<div class="detail-section"><h4><span class="icon">💬</span>例句</h4>`;
       sents.forEach(s=>{
@@ -1536,7 +1524,6 @@
       html += `</div></div>`;
     }
 
-    // syno
     if(synos.length){
       html += `<div class="detail-section"><h4><span class="icon">🔄</span>同近词</h4>`;
       synos.forEach(s=>{
@@ -1546,7 +1533,6 @@
       html += `</div></div>`;
     }
 
-    // relWord
     if(rels.length){
       html += `<div class="detail-section"><h4><span class="icon">🌱</span>同根词</h4>`;
       rels.forEach(r=>{
@@ -1558,7 +1544,6 @@
       html += `</div></div>`;
     }
 
-    // remMethod
     if(rem){
       html += `<div class="detail-section"><h4><span class="icon">🧠</span>记忆法</h4><div style="font-size:14px;color:var(--text);line-height:1.6;background:#f8fafc;padding:8px 12px;border-radius:6px;">${escapeHtml(rem)}</div></div>`;
     }
@@ -1576,7 +1561,6 @@
     const count = activeVocab.length;
     $("status").innerHTML = `当前 <span class="ok">${count}</span> 词 · ${mode==="order"?"顺序":"随机"}模式 · ${scope}`;
   }
-  // transient hint in status bar (auto-restores current status after 2.5s)
   let _flashTimer = null;
   function flashStatus(msg){
     const s = $("status");
@@ -1594,7 +1578,6 @@
     e.target.value = "";
   });
 
-  // drag-drop
   ["dragover","dragenter"].forEach(ev=>{
     $("dropZone").addEventListener(ev, e=>{ e.preventDefault(); $("dropZone").classList.add("dragover"); });
     document.body.addEventListener(ev, e=> e.preventDefault());
@@ -1640,7 +1623,6 @@
       }
     } else if(e.key==="Escape"){ closeSearch(); searchInput.blur(); }
   });
-  // click item to jump
   $("searchResults").addEventListener("click", e=>{
     const it = e.target.closest(".search-item");
     if(it){
@@ -1648,7 +1630,6 @@
       if(!isNaN(vidx)) jumpToVidx(vidx);
     }
   });
-  // hover to set active
   $("searchResults").addEventListener("mouseover", e=>{
     const it = e.target.closest(".search-item");
     if(!it) return;
@@ -1657,7 +1638,6 @@
     searchActiveIdx = n;
     $("searchResults").querySelectorAll(".search-item").forEach((el,i)=> el.classList.toggle("active", i===n));
   });
-  // close dropdown when clicking outside
   document.addEventListener("click", e=>{
     if(!e.target.closest(".search-wrap")) closeSearch();
   });
@@ -1665,9 +1645,8 @@
   // ===== Unit filter controls =====
   initGradeSelect();
   refreshUnitSelect();
-  // toggle switch
   $("unitFilterToggle").addEventListener("click", ()=>{
-    if(!rawVocab.length){ // no vocab loaded → ignore
+    if(!rawVocab.length){
       $("unitFilterToggle").classList.remove("on");
       return;
     }
@@ -1675,31 +1654,24 @@
     localStorage.setItem(LS_LAST_FILTER, filterByUnit ? "1" : "0");
     $("unitFilterToggle").classList.toggle("on", filterByUnit);
     if(filterByUnit){
-      // auto-load current selected unit if not loaded yet
-      applyUnitSelection(true);  // async, will rebuildActiveVocab after load
+      applyUnitSelection(true);
     } else {
       currentUnitData = null;
       currentUnitLabel = "";
       rebuildActiveVocab();
     }
   });
-  // grade change → refresh unit options → if filter on, reload unit
   $("gradeSelect").addEventListener("change", ()=>{
     localStorage.setItem(LS_LAST_GRADE, $("gradeSelect").value);
     localStorage.setItem(LS_LAST_UNIT, "0");
     refreshUnitSelect();
     if(filterByUnit) applyUnitSelection(true);
   });
-  // unit change → if filter on, reload unit
   $("unitSelect").addEventListener("change", ()=>{
     localStorage.setItem(LS_LAST_UNIT, $("unitSelect").value);
     if(filterByUnit) applyUnitSelection(true);
   });
-  $("unitSelect").addEventListener("change", ()=>{
-    if(filterByUnit) applyUnitSelection(true);
-  });
 
-  // load unit file for current grade+unit selection, then rebuild active vocab
   let _unitLoading = false;
   async function applyUnitSelection(rebuild){
     if(_unitLoading) return;
@@ -1720,8 +1692,6 @@
     _unitLoading = true;
     uSel.disabled = true;
     gSel.disabled = true;
-    // show loading hint in status
-    const prevStatus = $("status").innerHTML;
     $("status").innerHTML = `⏳ 正在加载单元词汇 <span class="scope-tag">${escapeHtml(label)}</span> …`;
     const data = await loadUnitFile(filename);
     uSel.disabled = !rawVocab.length;
@@ -1729,7 +1699,6 @@
     _unitLoading = false;
     if(!data || !Array.isArray(data) || !data.length){
       $("status").innerHTML = `❌ 单元加载失败: ${escapeHtml(filename)}`;
-      // turn off filter on failure to keep page usable
       filterByUnit = false;
       $("unitFilterToggle").classList.remove("on");
       currentUnitData = null;
@@ -1742,13 +1711,13 @@
     currentUnitLabel = label;
     if(rebuild) rebuildActiveVocab();
   }
+
   $("prevBtn").addEventListener("click", prev);
   $("nextBtn").addEventListener("click", next);
   $("speakBtn").addEventListener("click", e=>{
     const w = e.currentTarget.dataset.word;
     if(w) speak(w, "us");
   });
-  // click phonetic / any [data-speak] to pronounce (carries accent: uk=英RP, us=美)
   document.addEventListener("click", e=>{
     const node = e.target.closest("[data-speak]");
     if(node && node.dataset.speak){ speak(node.dataset.speak, node.dataset.accent); }
@@ -1762,16 +1731,12 @@
     else if(e.key==="ArrowRight") next();
   });
 
-  // click a left/right list item → preview that word in center column.
-  // Works for any word in the whole vocab (in or out of current unit).
-  // prev/next still navigate within the filtered scope (exits preview).
   function previewWord(vidx){
     if(vidx==null || vidx<0 || vidx>=rawVocab.length) return;
     previewIdx = vidx;
     showCurrent();
   }
 
-  // delegate list clicks
   function delegateClick(containerId){
     $(containerId).addEventListener("click", e=>{
       const item = e.target.closest(".word-list-item");
@@ -1800,31 +1765,40 @@
   $("settingsBtn").addEventListener("click", toggleDrawer);
   $("drawerClose").addEventListener("click", closeDrawer);
   $("drawerBackdrop").addEventListener("click", closeDrawer);
-  // ESC closes drawer
   document.addEventListener("keydown", e=>{
     if(e.key==="Escape" && $("drawer").classList.contains("open")) closeDrawer();
   });
-  // Close drawer when an action inside it fires (e.g. selecting a unit,
-  // clicking a mode toggle) — feels more natural on mobile.
-  // We watch for "change"/"click" events that bubble up from the drawer.
-  // But we keep search input and file open from auto-closing (user may need
-  // to interact with results). So only auto-close on grade/unit/mode/reload.
+
   ["gradeSelect","unitSelect","modeToggle","reloadBtn","unitFilterToggle","loadBtn"].forEach(id=>{
     const el = $(id);
     if(el) el.addEventListener("click", ()=> {
-      // small delay so the action (e.g. mode toggle visual) applies first
       if(window.matchMedia("(max-width: 980px)").matches){
         setTimeout(closeDrawer, 120);
       }
     });
   });
 
-  // ===== Boot: restore last session from cache (IndexedDB + localStorage) =====
-  // If a vocab file was cached on a previous load, restore it automatically
-  // instead of showing the "select file" overlay. Unit filter state is restored too.
+  // ===== Mobile Side-Tabs Switch =====
+  const sideTabsCol = $("sideTabsCol");
+  const tabBtns = document.querySelectorAll(".side-tabs-header .tab-btn");
+  tabBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const tabType = btn.getAttribute("data-tab");
+      tabBtns.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      if (tabType === "prefix") {
+        sideTabsCol.classList.add("active-prefix");
+        sideTabsCol.classList.remove("active-suffix");
+      } else {
+        sideTabsCol.classList.add("active-suffix");
+        sideTabsCol.classList.remove("active-prefix");
+      }
+    });
+  });
+
+  // ===== Boot =====
   restoreFromCache().then(restored=>{
     if(!restored){
-      // no cache or restore failed → show the load overlay as before
       $("overlay").style.display = "flex";
     }
   });
