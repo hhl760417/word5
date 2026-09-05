@@ -42,7 +42,7 @@
     gap: 18px;
     flex-wrap: wrap;
     box-shadow: var(--shadow);
-    z-index: 10;
+    z-index: 60;
   }
   .logo {
     font-size: 18px;
@@ -409,41 +409,202 @@
   .col.left .word-list-item .w mark { background: var(--left-soft); color: var(--left-color);}
   .col.right .word-list-item .w mark { background: var(--right-soft); color: var(--right-color);}
 
-  @media (max-width: 980px) {
-    main { gap: 8px; padding: 8px; grid-template-columns: minmax(140px, 1fr) minmax(240px, 1.8fr) minmax(140px, 1fr); }
-    .word-display { font-size: 30px; letter-spacing: 1px; }
-    .word-stage { padding: 14px 8px 10px; }
+  /* ===== Settings button (mobile only) ===== */
+  .settings-btn {
+    display: none;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    font-size: 18px;
+    cursor: pointer;
+    align-items: center; justify-content: center;
+    transition: all .15s;
+    flex-shrink: 0;
+  }
+  .settings-btn:hover { background: #2563eb; transform: rotate(30deg); }
+
+  /* ===== Drawer (holds toolbar on mobile) ===== */
+  .drawer-backdrop {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(15,23,42,.45);
+    z-index: 200;
+    opacity: 0;
+    transition: opacity .2s;
+  }
+  .drawer-backdrop.open { display: block; opacity: 1; }
+  .drawer {
+    position: fixed;
+    top: 0; right: 0; bottom: 0;
+    width: min(320px, 85vw);
+    background: var(--panel);
+    box-shadow: -4px 0 24px rgba(0,0,0,.18);
+    transform: translateX(100%);
+    transition: transform .25s ease;
+    z-index: 201;
+    overflow-y: auto;
+    display: flex; flex-direction: column;
+    padding: 16px;
+    gap: 14px;
+  }
+  .drawer.open { transform: translateX(0); }
+  .drawer-head {
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 10px;
+    font-size: 15px; font-weight: 700;
+    color: var(--accent);
+  }
+  .drawer-close {
+    background: #f1f5f9; border: none;
+    width: 30px; height: 30px; border-radius: 50%;
+    font-size: 16px; cursor: pointer; color: var(--text-muted);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .drawer-close:hover { background: #e2e8f0; color: var(--text); }
+  .drawer .toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    flex-wrap: nowrap !important;
+  }
+  .drawer .toolbar > * { width: 100%; }
+  .drawer .mode-toggle { align-self: stretch; }
+  .drawer .mode-toggle button { flex:1; }
+  .drawer .search-wrap { display:block; }
+  .drawer .search-input { width: 100%; }
+  .drawer .search-results { position: static; box-shadow: none; border-color: var(--border); margin-top: 4px; }
+  .drawer .unit-filter-toggle { justify-content: space-between; }
+  .drawer .sel { min-width: 0; width: 100%; }
+  .drawer-section-label {
+    font-size: 11px; color: var(--text-muted); font-weight: 600;
+    text-transform: uppercase; letter-spacing: .5px;
+    margin-bottom: -6px;
+  }
+
+  /* ===== Mobile responsive ===== */
+  /* Mobile portrait: stack 3 rows */
+  @media (max-width: 980px) and (orientation: portrait) {
+    header { padding: 8px 12px; gap: 8px; }
+    .logo { font-size: 15px; }
+    .logo small { display: none; }
+    .toolbar { display: none; } /* moved into drawer */
+    .settings-btn { display: flex; }
+    .status { font-size: 11px; flex: 1; margin: 0; text-align: right; }
+    main {
+      grid-template-columns: 1fr !important;
+      grid-template-rows: minmax(120px, 0.8fr) minmax(300px, 1.4fr) minmax(120px, 0.8fr);
+      gap: 8px; padding: 8px;
+    }
+    .word-display { font-size: 28px; letter-spacing: 1px; }
+    .word-stage { padding: 12px 8px 8px; }
+    .word-controls { gap: 10px; margin-bottom: 8px; }
+    .btn-nav, .btn-speak { width: 34px; height: 34px; font-size: 16px; }
     .details { padding: 10px; }
     .word-list-item { font-size: 13px; padding: 6px 8px; }
     .word-list-item .tran { display:none; }
-    .logo small { display:none; }
-    .status { font-size: 12px; }
+    .col-head { padding: 8px 10px; font-size: 12px; }
+    .prefix-hint { font-size: 11px; padding: 4px 8px; }
+  }
+  /* Mobile landscape: keep 3 columns but compact */
+  @media (max-width: 980px) and (orientation: landscape) {
+    header { padding: 6px 10px; gap: 8px; }
+    .logo { font-size: 14px; }
+    .logo small { display: none; }
+    .toolbar { display: none; }
+    .settings-btn { display: flex; width: 34px; height: 34px; font-size: 16px; }
+    .status { font-size: 11px; flex: 1; margin: 0; text-align: right; }
+    main {
+      grid-template-columns: minmax(110px, 1fr) minmax(220px, 1.8fr) minmax(110px, 1fr) !important;
+      gap: 8px; padding: 8px;
+    }
+    .word-display { font-size: 24px; letter-spacing: 1px; min-height: 38px; }
+    .word-stage { padding: 8px 6px 6px; }
+    .word-controls { gap: 10px; margin-bottom: 6px; }
+    .btn-nav, .btn-speak { width: 32px; height: 32px; font-size: 14px; }
+    .details { padding: 8px; }
+    .word-list-item { font-size: 12px; padding: 5px 6px; gap: 4px; }
+    .word-list-item .tran { display:none; }
+    .col-head { padding: 6px 8px; font-size: 11px; }
+    .prefix-hint { font-size: 10px; padding: 3px 6px; }
+    .detail-section { margin-bottom: 10px; }
+    .detail-section h4 { font-size: 12px; }
+  }
+  /* Desktop: drawer becomes inline toolbar inside header */
+  @media (min-width: 981px) {
+    .drawer-backdrop { display: none !important; }
+    .settings-btn { display: none !important; }
+    .drawer {
+      position: static;
+      transform: none;
+      box-shadow: none;
+      background: transparent;
+      padding: 0;
+      gap: 0;
+      width: auto;
+      overflow: visible;
+      display: block;
+    }
+    .drawer-head { display: none; }
+    .drawer-section-label { display: none; }
+    .drawer .toolbar {
+      flex-direction: row !important;
+      align-items: center !important;
+      gap: 14px !important;
+      flex-wrap: wrap !important;
+      width: auto;
+    }
+    .drawer .toolbar > * { width: auto; }
+    .drawer .mode-toggle button { flex: 0 0 auto; }
+    .drawer .search-input { width: 200px; }
+    .drawer .search-input:focus { width: 240px; }
+    .drawer .search-results {
+      position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+      box-shadow: 0 8px 24px rgba(0,0,0,.12);
+      max-height: 320px; min-width: 260px;
+    }
+    .drawer .sel { min-width: 110px; width: auto; }
+    .drawer .unit-filter-toggle { justify-content: flex-start; }
   }
 </style>
 </head>
 <body>
   <header>
     <div class="logo">📘 英语词库浏览器 <small>v1.0</small></div>
-    <div class="toolbar">
-      <input type="file" id="fileInput" accept=".json" style="display:none">
-      <button class="btn" id="loadBtn">📁 加载词库</button>
-      <div class="mode-toggle" id="modeToggle">
-        <button data-mode="order" class="active">顺序</button>
-        <button data-mode="random">随机</button>
+    <div class="drawer-backdrop" id="drawerBackdrop"></div>
+    <aside class="drawer" id="drawer">
+      <div class="drawer-head">
+        <span>⚙️ 控制面板</span>
+        <button class="drawer-close" id="drawerClose" title="关闭">✕</button>
       </div>
-      <button class="btn secondary" id="reloadBtn" disabled>↻ 重新打乱</button>
-      <div class="unit-filter-toggle" id="unitFilterToggle" title="打开后按年级+单元限定词汇范围；关闭则使用整个词库">
-        <span class="toggle-label">按单元筛选</span>
-        <span class="toggle-switch"><span class="toggle-knob"></span></span>
+      <div class="toolbar">
+        <div class="drawer-section-label">词库</div>
+        <input type="file" id="fileInput" accept=".json" style="display:none">
+        <button class="btn" id="loadBtn">📁 加载词库</button>
+        <div class="drawer-section-label">播放模式</div>
+        <div class="mode-toggle" id="modeToggle">
+          <button data-mode="order" class="active">顺序</button>
+          <button data-mode="random">随机</button>
+        </div>
+        <button class="btn secondary" id="reloadBtn" disabled>↻ 重新打乱</button>
+        <div class="drawer-section-label">单元筛选</div>
+        <div class="unit-filter-toggle" id="unitFilterToggle" title="打开后按年级+单元限定词汇范围；关闭则使用整个词库">
+          <span class="toggle-label">按单元筛选</span>
+          <span class="toggle-switch"><span class="toggle-knob"></span></span>
+        </div>
+        <select id="gradeSelect" class="sel" disabled title="选择年级"></select>
+        <select id="unitSelect" class="sel" disabled title="选择单元/学期"></select>
+        <div class="drawer-section-label">搜索</div>
+        <div class="search-wrap" id="searchWrap">
+          <input type="text" id="searchInput" class="search-input" placeholder="🔍 搜索单词..." disabled autocomplete="off">
+          <div class="search-results" id="searchResults" hidden></div>
+        </div>
       </div>
-      <select id="gradeSelect" class="sel" disabled title="选择年级"></select>
-      <select id="unitSelect" class="sel" disabled title="选择单元/学期"></select>
-      <div class="search-wrap" id="searchWrap">
-        <input type="text" id="searchInput" class="search-input" placeholder="🔍 搜索单词..." disabled autocomplete="off">
-        <div class="search-results" id="searchResults" hidden></div>
-      </div>
-    </div>
+    </aside>
     <div class="status" id="status">未加载词库</div>
+    <button class="settings-btn" id="settingsBtn" title="设置">⚙️</button>
   </header>
 
   <main>
@@ -1619,6 +1780,41 @@
   }
   delegateClick("leftList");
   delegateClick("rightList");
+
+  // ===== Mobile drawer toggle =====
+  function openDrawer(){
+    $("drawer").classList.add("open");
+    $("drawerBackdrop").classList.add("open");
+  }
+  function closeDrawer(){
+    $("drawer").classList.remove("open");
+    $("drawerBackdrop").classList.remove("open");
+  }
+  function toggleDrawer(){
+    if($("drawer").classList.contains("open")) closeDrawer();
+    else openDrawer();
+  }
+  $("settingsBtn").addEventListener("click", toggleDrawer);
+  $("drawerClose").addEventListener("click", closeDrawer);
+  $("drawerBackdrop").addEventListener("click", closeDrawer);
+  // ESC closes drawer
+  document.addEventListener("keydown", e=>{
+    if(e.key==="Escape" && $("drawer").classList.contains("open")) closeDrawer();
+  });
+  // Close drawer when an action inside it fires (e.g. selecting a unit,
+  // clicking a mode toggle) — feels more natural on mobile.
+  // We watch for "change"/"click" events that bubble up from the drawer.
+  // But we keep search input and file open from auto-closing (user may need
+  // to interact with results). So only auto-close on grade/unit/mode/reload.
+  ["gradeSelect","unitSelect","modeToggle","reloadBtn","unitFilterToggle","loadBtn"].forEach(id=>{
+    const el = $(id);
+    if(el) el.addEventListener("click", ()=> {
+      // small delay so the action (e.g. mode toggle visual) applies first
+      if(window.matchMedia("(max-width: 980px)").matches){
+        setTimeout(closeDrawer, 120);
+      }
+    });
+  });
 
   // ===== Boot: restore last session from cache (IndexedDB + localStorage) =====
   // If a vocab file was cached on a previous load, restore it automatically
