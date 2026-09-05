@@ -1368,6 +1368,7 @@
   }
 
   // ===== Rendering =====
+  /*
   function renderWord(w, isPreview){
     const head = getHead(w);
     const disp = $("wordDisplay");
@@ -1393,6 +1394,7 @@
     $("speakBtn").disabled = !head;
     $("speakBtn").dataset.word = head;
   }
+  */
 
   function setCursor(i){
     cursorIdx = i;
@@ -1402,6 +1404,7 @@
     renderPrefixLists();
   }
 
+  /*
   function renderPrefixLists(){
     // in preview mode, lists search/highlight against the previewed word;
     // otherwise against the current orderList position's word.
@@ -1417,6 +1420,8 @@
       $("rightCount").textContent = "0";
       return;
     }
+    */
+  
     // 左侧字母 = head[0 .. cursorIdx]  (含光标所在字母) -> 前缀匹配
     // 右侧字母 = head[cursorIdx .. end] (含光标所在字母) -> 后缀匹配
     const leftPrefix = dispHead.substring(0, cursorIdx+1);
