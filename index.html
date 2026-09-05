@@ -271,7 +271,7 @@
   .word-list-item .pos { font-size: 10px; font-weight: 700; color: #be185d; background: #fce7f3; padding: 1px 5px; border-radius: 4px; min-width: 22px; text-align:center; font-style: italic; line-height:1.5; }
   .word-list-item .pos.none { color: #cbd5e0; background: #f1f5f9; }
   .word-list-item .w { font-family: ui-monospace, Consolas, monospace; }
-  .word-list-item .tran { color: var(--text-muted); font-size: 12px; margin-left:auto; max-width: 38%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .word-list-item .tran { color: var(--text-muted); font-size: 12px; margin-left:auto; max-width: 38%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:right; }
 
   /* ===== Middle column ===== */
   .col.middle { display:flex; flex-direction:column; }
@@ -490,7 +490,6 @@
     header { padding: 8px 12px; gap: 8px; }
     .logo { font-size: 15px; }
     .logo small { display: none; }
-    .toolbar { display: none; } /* moved into drawer */
     .settings-btn { display: flex; }
     .status { font-size: 11px; flex: 1; margin: 0; text-align: right; }
     main {
@@ -504,7 +503,7 @@
     .btn-nav, .btn-speak { width: 34px; height: 34px; font-size: 16px; }
     .details { padding: 10px; }
     .word-list-item { font-size: 13px; padding: 6px 8px; }
-    .word-list-item .tran { display:none; }
+    .word-list-item .tran { font-size: 11px; max-width: 42%; }
     .col-head { padding: 8px 10px; font-size: 12px; }
     .prefix-hint { font-size: 11px; padding: 4px 8px; }
   }
@@ -513,7 +512,6 @@
     header { padding: 6px 10px; gap: 8px; }
     .logo { font-size: 14px; }
     .logo small { display: none; }
-    .toolbar { display: none; }
     .settings-btn { display: flex; width: 34px; height: 34px; font-size: 16px; }
     .status { font-size: 11px; flex: 1; margin: 0; text-align: right; }
     main {
@@ -526,7 +524,7 @@
     .btn-nav, .btn-speak { width: 32px; height: 32px; font-size: 14px; }
     .details { padding: 8px; }
     .word-list-item { font-size: 12px; padding: 5px 6px; gap: 4px; }
-    .word-list-item .tran { display:none; }
+    .word-list-item .tran { font-size: 10px; max-width: 40%; }
     .col-head { padding: 6px 8px; font-size: 11px; }
     .prefix-hint { font-size: 10px; padding: 3px 6px; }
     .detail-section { margin-bottom: 10px; }
