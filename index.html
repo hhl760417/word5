@@ -319,30 +319,30 @@
     font-size: 12px; color: var(--text-muted); margin-top: 4px;
   }
 
-  /* resizer between word-stage and details */
-  .resizer {
+  /* main-resizer: only visible in mobile portrait (flex column layout) */
+  .main-resizer {
+    display: none;
     height: 16px;
     cursor: ns-resize;
     background: #e2e8f0;
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
+    border: 1px solid var(--border);
+    border-radius: 6px;
     flex-shrink: 0;
     position: relative;
     transition: background .15s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
   }
-  .resizer::before {
+  .main-resizer::before {
     content: "⋮";
     position: absolute;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
     font-size: 14px;
     color: #94a3b8;
     line-height: 1;
     transition: color .15s;
   }
-  .resizer:hover, .resizer.dragging { background: var(--accent-soft); }
-  .resizer:hover::before, .resizer.dragging::before { color: var(--accent); content: "⇕"; font-size: 16px; }
+  .main-resizer:hover, .main-resizer.dragging { background: var(--accent-soft); }
+  .main-resizer:hover::before, .main-resizer.dragging::before { color: var(--accent); content: "⇕"; font-size: 16px; }
 
   .details { flex:1; overflow-y:auto; padding: 16px; min-height: 60px; }
   .details::-webkit-scrollbar { width:8px; }
@@ -624,31 +624,6 @@
     .side-tabs-col.active-suffix .col.right { display: flex !important; }
   }
 
-  /* main-resizer: only visible in mobile portrait (flex column layout) */
-  .main-resizer {
-    display: none;
-    height: 16px;
-    cursor: ns-resize;
-    background: #e2e8f0;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    flex-shrink: 0;
-    position: relative;
-    transition: background .15s;
-  }
-  .main-resizer::before {
-    content: "⋮";
-    position: absolute;
-    left: 50%; top: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 14px;
-    color: #94a3b8;
-    line-height: 1;
-    transition: color .15s;
-  }
-  .main-resizer:hover, .main-resizer.dragging { background: var(--accent-soft); }
-  .main-resizer:hover::before, .main-resizer.dragging::before { color: var(--accent); content: "⇕"; font-size: 16px; }
-
   /* ===== Mobile Portrait (竖屏) ===== */
   @media (max-width: 980px) and (orientation: portrait) {
     main {
@@ -748,7 +723,6 @@
           <button class="btn-nav" id="nextBtn" title="下一个" disabled>›</button>
         </div>
       </div>
-      <div class="resizer" id="resizer" title="拖动调整高度"></div>
       <div class="details" id="details">
         <div class="empty"><div class="big">📖</div>加载词库并选择单词后，此处显示详细信息</div>
       </div>
@@ -1801,69 +1775,6 @@
   delegateClick("leftList");
   delegateClick("rightList");
 
-  // ===== Resizer: drag to adjust word-stage / details height =====
-  (function initResizer(){
-    const resizer = $("resizer");
-    const stage = $("wordStage") || document.querySelector(".word-stage");
-    const details = $("details");
-    if(!resizer || !stage || !details) return;
-    let dragging = false;
-    let startY = 0;
-    let startStageH = 0;
-    let colH = 0;
-    resizer.addEventListener("mousedown", e=>{
-      dragging = true;
-      startY = e.clientY;
-      startStageH = stage.offsetHeight;
-      colH = stage.parentElement.offsetHeight; // .col.middle total
-      resizer.classList.add("dragging");
-      document.body.style.cursor = "ns-resize";
-      document.body.style.userSelect = "none";
-      e.preventDefault();
-    });
-    document.addEventListener("mousemove", e=>{
-      if(!dragging) return;
-      const delta = e.clientY - startY;
-      let h = startStageH + delta;
-      const resizerH = resizer.offsetHeight;
-      const maxH = colH - resizerH - 60; // keep details >= 60px
-      h = Math.max(80, Math.min(maxH, h));
-      stage.style.height = h + "px";
-      stage.style.flex = "0 0 " + h + "px";
-    });
-    function endDrag(){
-      if(!dragging) return;
-      dragging = false;
-      resizer.classList.remove("dragging");
-      document.body.style.cursor = "";
-      document.body.style.userSelect = "";
-    }
-    document.addEventListener("mouseup", endDrag);
-    // touch support
-    resizer.addEventListener("touchstart", e=>{
-      const t = e.touches[0];
-      dragging = true;
-      startY = t.clientY;
-      startStageH = stage.offsetHeight;
-      colH = stage.parentElement.offsetHeight;
-      resizer.classList.add("dragging");
-      e.preventDefault();
-    }, {passive:false});
-    document.addEventListener("touchmove", e=>{
-      if(!dragging) return;
-      const t = e.touches[0];
-      const delta = t.clientY - startY;
-      let h = startStageH + delta;
-      const resizerH = resizer.offsetHeight;
-      const maxH = colH - resizerH - 60;
-      h = Math.max(80, Math.min(maxH, h));
-      stage.style.height = h + "px";
-      stage.style.flex = "0 0 " + h + "px";
-      e.preventDefault();
-    }, {passive:false});
-    document.addEventListener("touchend", endDrag);
-  })();
-
   // ===== Main resizer: drag to adjust middle / side-tabs ratio (mobile portrait) =====
   (function initMainResizer(){
     const mr = $("mainResizer");
@@ -1877,7 +1788,6 @@
       startMidH = middle.offsetHeight;
       startSideH = side.offsetHeight;
       totalH = startMidH + startSideH;
-      // fix current heights so flex doesn't re-flow during drag
       middle.style.flex = "0 0 " + startMidH + "px";
       side.style.flex = "0 0 " + startSideH + "px";
       mr.classList.add("dragging");
@@ -1887,9 +1797,8 @@
     function onMove(clientY){
       if(!dragging) return;
       const delta = clientY - startY;
-      let midH = startMidH + delta;     // drag down → middle taller
-      let sideH = startSideH - delta;  // side shorter (sum fixed)
-      // constraints
+      let midH = startMidH + delta;
+      let sideH = startSideH - delta;
       midH = Math.max(120, Math.min(totalH - 80, midH));
       sideH = totalH - midH;
       middle.style.flex = "0 0 " + midH + "px";
