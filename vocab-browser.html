@@ -1,0 +1,1636 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>英语词库浏览器</title>
+<style>
+  :root {
+    --bg: #f5f7fa;
+    --panel: #ffffff;
+    --border: #e2e8f0;
+    --text: #1a202c;
+    --text-muted: #718096;
+    --accent: #3b82f6;
+    --accent-soft: #dbeafe;
+    --left-color: #0ea5e9;
+    --left-soft: #e0f2fe;
+    --right-color: #8b5cf6;
+    --right-soft: #f3e8ff;
+    --hover: #f1f5f9;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ===== Header ===== */
+  header {
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+    box-shadow: var(--shadow);
+    z-index: 10;
+  }
+  .logo {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  .logo small { color: var(--text-muted); font-weight: 400; font-size: 12px; margin-left:6px;}
+  .toolbar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all .15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+  }
+  .btn:hover { background: #2563eb; transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+  .btn.secondary { background: #fff; color: var(--accent); border: 1.5px solid var(--accent); }
+  .btn.secondary:hover { background: var(--accent-soft); }
+
+  /* search box */
+  .search-wrap { position: relative; display: inline-flex; align-items: center; }
+
+  /* unit filter toggle switch */
+  .unit-filter-toggle {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 10px; border-radius: 8px; cursor: pointer;
+    background: #f1f5f9; border: 1.5px solid #cbd5e0;
+    font-size: 13px; color: var(--text-muted); user-select: none;
+    transition: all .15s;
+  }
+  .unit-filter-toggle:hover { border-color: var(--accent); }
+  .unit-filter-toggle.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .toggle-label { font-weight: 500; }
+  .toggle-switch {
+    width: 34px; height: 18px; border-radius: 10px;
+    background: #cbd5e0; position: relative; transition: background .15s;
+  }
+  .toggle-knob {
+    position: absolute; top: 2px; left: 2px;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: #fff; transition: left .15s;
+    box-shadow: 0 1px 2px rgba(0,0,0,.2);
+  }
+  .unit-filter-toggle.on .toggle-switch { background: var(--accent); }
+  .unit-filter-toggle.on .toggle-knob { left: 18px; }
+
+  /* dropdown selects */
+  .sel {
+    padding: 7px 10px; font-size: 13px; border: 1.5px solid var(--accent);
+    border-radius: 8px; background: #fff; color: var(--text);
+    cursor: pointer; outline: none; min-width: 110px;
+    font-family: inherit; transition: all .15s;
+  }
+  .sel:hover { border-color: #2563eb; }
+  .sel:focus { box-shadow: 0 0 0 3px rgba(37,99,235,.15); }
+  .sel:disabled { background: #f1f5f9; color: #94a3b8; cursor: not-allowed; border-color: #cbd5e0; }
+  .sel optgroup { font-style: normal; font-weight: 600; color: #475569; }
+  .search-input {
+    padding: 8px 12px; font-size: 14px; border: 1.5px solid var(--accent);
+    border-radius: 8px; width: 200px; outline: none; transition: all .15s;
+    font-family: ui-monospace, Consolas, monospace;
+  }
+  .search-input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,.15); width: 240px; }
+  .search-input:disabled { background: #f1f5f9; color: #94a3b8; cursor: not-allowed; border-color: #cbd5e0; }
+  .search-results {
+    position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+    background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.12); max-height: 320px; overflow-y: auto;
+    z-index: 100; min-width: 260px;
+  }
+  .search-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 12px; cursor: pointer; border-bottom: 1px solid #f1f5f9;
+    font-size: 13px; transition: background .1s;
+  }
+  .search-item:last-child { border-bottom: none; }
+  .search-item:hover, .search-item.active { background: var(--accent-soft); }
+  .search-item .s-pos { color: #be185d; font-style: italic; font-size: 11px; min-width: 30px; }
+  .search-item .s-word { font-family: ui-monospace, Consolas, monospace; font-weight: 600; }
+  .search-item .s-tran { color: var(--text-muted); font-size: 12px; margin-left: auto;
+    max-width: 45%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .search-item mark { background: #fde68a; color: inherit; border-radius: 2px; padding: 0 1px; }
+  .search-empty { padding: 12px; text-align: center; color: var(--text-muted); font-size: 13px; }
+  .btn:disabled { background:#cbd5e0; cursor:not-allowed; transform:none; }
+  .btn-nav {
+    background: var(--accent);
+    color:#fff;
+    border:none;
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    font-size: 18px;
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    transition: all .15s;
+    font-weight:700;
+  }
+  .btn-nav:hover { background:#2563eb; transform: scale(1.08); }
+  .btn-nav:disabled { background:#cbd5e0; cursor:not-allowed; transform:none; }
+  .btn-speak {
+    background:#fff; color:var(--accent);
+    border:1.5px solid var(--accent);
+    width:38px; height:38px; border-radius:50%;
+    font-size:17px; cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    transition: all .15s;
+  }
+  .btn-speak:hover:not(:disabled){ background:var(--accent-soft); transform:scale(1.08); }
+  .btn-speak:disabled{ color:#cbd5e0; border-color:#cbd5e0; cursor:not-allowed; }
+
+  .mode-toggle {
+    display: inline-flex;
+    background: #edf2f7;
+    border-radius: 8px;
+    padding: 3px;
+    gap: 2px;
+  }
+  .mode-toggle button {
+    border: none;
+    background: transparent;
+    padding: 6px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-muted);
+    transition: all .15s;
+    font-weight:500;
+  }
+  .mode-toggle button.active {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 1px 3px rgba(59,130,246,.4);
+  }
+  .status {
+    margin-left: auto;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .status .ok { color: #16a34a; font-weight:600; }
+  .status .scope-tag { color: var(--accent); font-weight:600; background: var(--accent-soft); padding: 1px 8px; border-radius: 10px; font-size: 11px; }
+  .status .warn { color: #d97706; }
+
+  /* ===== Main 3-column ===== */
+  main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: minmax(170px, 1fr) minmax(300px, 1.8fr) minmax(170px, 1fr);
+    gap: 12px;
+    padding: 12px;
+    overflow: hidden;
+    min-height: 0;
+  }
+  .col {
+    background: var(--panel);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+  }
+  .col-head {
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+    display:flex; align-items:center; gap:8px;
+    background: #fafbfc;
+    flex-shrink:0;
+  }
+  .col-head .dot { width:8px;height:8px;border-radius:50%; }
+  .col-head .count {
+    margin-left:auto;
+    background:var(--accent-soft);
+    color:var(--accent);
+    padding:2px 8px;
+    border-radius:10px;
+    font-size:11px;
+    font-weight:600;
+  }
+  .col.left .col-head .dot { background: var(--left-color); }
+  .col.left .col-head .count { background:var(--left-soft); color:var(--left-color); }
+  .col.right .col-head .dot { background: var(--right-color); }
+  .col.right .col-head .count { background:var(--right-soft); color:var(--right-color); }
+
+  .col-body { flex:1; overflow-y:auto; padding:8px; }
+  .col-body::-webkit-scrollbar { width:8px; }
+  .col-body::-webkit-scrollbar-thumb { background:#cbd5e0; border-radius:4px; }
+  .col-body::-webkit-scrollbar-track { background:transparent; }
+
+  /* prefix hint */
+  .prefix-hint {
+    padding: 6px 10px;
+    font-size: 12px;
+    color: var(--text-muted);
+    background: #fafbfc;
+    border-bottom: 1px solid var(--border);
+    font-family: ui-monospace, "SF Mono", Consolas, monospace;
+    flex-shrink:0;
+  }
+  .prefix-hint b { color: var(--text); background: #fff3cd; padding:1px 5px; border-radius:3px; }
+
+  .word-list-item {
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background .12s;
+    font-size: 14px;
+    display:flex; align-items:center; gap:8px;
+    border: 1px solid transparent;
+  }
+  .word-list-item:hover { background: var(--hover); }
+  .word-list-item.current { background: var(--accent-soft); border-color: var(--accent); font-weight:600; }
+  .word-list-item.inactive { opacity: .5; cursor: default; }
+  .word-list-item.inactive:hover { background: transparent; }
+  .word-list-item .rank { color: var(--text-muted); font-size: 11px; min-width: 22px; }
+  .word-list-item .pos { font-size: 10px; font-weight: 700; color: #be185d; background: #fce7f3; padding: 1px 5px; border-radius: 4px; min-width: 22px; text-align:center; font-style: italic; line-height:1.5; }
+  .word-list-item .pos.none { color: #cbd5e0; background: #f1f5f9; }
+  .word-list-item .w { font-family: ui-monospace, Consolas, monospace; }
+  .word-list-item .tran { color: var(--text-muted); font-size: 12px; margin-left:auto; max-width: 38%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  /* ===== Middle column ===== */
+  .col.middle { display:flex; flex-direction:column; }
+  .word-stage {
+    padding: 22px 16px 16px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg,#ffffff 0%, #f8fafc 100%);
+    flex-shrink:0;
+  }
+  .word-controls {
+    display:flex; align-items:center; justify-content:center; gap: 18px;
+    margin-bottom: 14px;
+  }
+  .word-display {
+    font-size: 40px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    min-height: 56px;
+    font-family: ui-monospace, "SF Mono", Consolas, "Courier New", monospace;
+    user-select: none;
+    line-height: 1.3;
+  }
+  .word-display .char {
+    cursor: pointer;
+    padding: 2px 1px;
+    border-radius: 4px;
+    transition: all .12s;
+    position: relative;
+  }
+  .word-display .char:hover { background: #fff3cd; }
+  .word-display .char.active {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(59,130,246,.4);
+  }
+  .word-display .char.left-mark { border-bottom: 3px solid var(--left-color); }
+  .word-display .char.right-mark { border-bottom: 3px solid var(--right-color); }
+  .word-display .char.left-mark.right-mark { border-bottom: 3px solid var(--accent); }
+  .word-hint {
+    font-size: 12px; color: var(--text-muted); margin-top: 10px;
+  }
+  .word-meta {
+    font-size: 12px; color: var(--text-muted); margin-top: 4px;
+  }
+
+  .details { flex:1; overflow-y:auto; padding: 16px; }
+  .details::-webkit-scrollbar { width:8px; }
+  .details::-webkit-scrollbar-thumb { background:#cbd5e0; border-radius:4px; }
+  .detail-section { margin-bottom: 18px; }
+  .detail-section h4 {
+    font-size: 13px;
+    color: var(--accent);
+    margin-bottom: 8px;
+    display:flex; align-items:center; gap:6px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+  }
+  .detail-section h4 .icon { font-size:14px; }
+  .pos-badge {
+    display: inline-block;
+    background: #fce7f3; color: #be185d;
+    font-size: 13px; font-weight: 700; font-style: italic;
+    padding: 3px 12px; border-radius: 6px;
+    margin-right: 8px;
+  }
+  .pos-badge.none { color: var(--text-muted); background: #f1f5f9; font-weight:400; font-style: normal; }
+
+  .phone-row { display:flex; gap: 18px; flex-wrap:wrap; margin-bottom: 6px; }
+  .phone-item { font-size:15px; }
+  .phone-item .label { color: var(--text-muted); font-size:12px; margin-right:5px; }
+  .phone-item .val { font-family: ui-monospace, Consolas, monospace; color: #be185d; }
+  .phone-item.phone-clickable { cursor:pointer; padding:3px 8px; border-radius:6px; transition: background .12s; }
+  .phone-item.phone-clickable:hover { background: var(--accent-soft); }
+
+  .trans-list .trans-item {
+    background: #f8fafc;
+    border-left: 3px solid var(--accent);
+    padding: 8px 12px;
+    border-radius: 4px;
+    margin-bottom: 6px;
+    font-size: 14px;
+  }
+  .trans-item .cn { font-weight: 600; }
+  .trans-item .en { color: var(--text-muted); font-size: 12px; margin-top: 3px; font-style: italic; font-family: Georgia, serif; }
+
+  .phrase-grid { display:flex; flex-direction:column; gap:6px; }
+  .phrase-item {
+    display:flex; gap:10px; align-items:baseline;
+    padding: 6px 10px; border-radius: 4px; background: #f8fafc;
+    font-size: 14px;
+  }
+  .phrase-item .p { font-family: ui-monospace, Consolas, monospace; color:#0f766e; font-weight:600; min-width: 160px; }
+  .phrase-item .c { color: var(--text-muted); }
+
+  .sentence-item {
+    padding: 8px 12px; border-radius: 4px; background:#fefce8; margin-bottom:6px;
+    border-left: 3px solid #eab308;
+    font-size: 14px;
+  }
+  .sentence-item .en { font-family: Georgia, serif; }
+  .sentence-item .cn { color: var(--text-muted); margin-top: 4px; }
+
+  .syno-item, .rel-item {
+    font-size: 13px; padding: 4px 0;
+  }
+  .syno-item .pos, .rel-item .pos { color: var(--accent); font-weight:600; margin-right:8px; font-style: italic;}
+  .syno-item .tran { color: var(--text); }
+
+  .empty {
+    text-align:center; color: var(--text-muted); padding: 40px 20px; font-size: 14px;
+  }
+  .empty .big { font-size: 40px; margin-bottom: 10px; opacity:.4; }
+
+  .placeholder-overlay {
+    position:absolute; inset:0; background: rgba(245,247,250,.92);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    z-index: 50; text-align:center; padding: 30px;
+  }
+  .placeholder-overlay .big { font-size: 50px; margin-bottom: 14px; opacity:.5;}
+  .placeholder-overlay h2 { color: var(--text); margin-bottom:8px; }
+  .placeholder-overlay p { color: var(--text-muted); max-width: 380px; line-height:1.6; }
+  .placeholder-overlay .file-formats { margin-top: 16px; font-size: 12px; color: var(--text-muted); }
+
+  #dropZone { 
+    border: 2px dashed var(--border); border-radius: 12px; 
+    padding: 30px 50px; margin-top: 18px; cursor:pointer; transition: all .15s;
+    background: #fff;
+  }
+  #dropZone.dragover { border-color: var(--accent); background: var(--accent-soft); }
+  #dropZone p { color: var(--text-muted); font-size: 13px; margin-top:6px;}
+
+  /* mark highlighting in lists */
+  .word-list-item .w mark { background: #fff3cd; color:inherit; padding:0 1px; border-radius:2px; font-weight:700;}
+  .col.left .word-list-item .w mark { background: var(--left-soft); color: var(--left-color);}
+  .col.right .word-list-item .w mark { background: var(--right-soft); color: var(--right-color);}
+
+  @media (max-width: 980px) {
+    main { gap: 8px; padding: 8px; grid-template-columns: minmax(140px, 1fr) minmax(240px, 1.8fr) minmax(140px, 1fr); }
+    .word-display { font-size: 30px; letter-spacing: 1px; }
+    .word-stage { padding: 14px 8px 10px; }
+    .details { padding: 10px; }
+    .word-list-item { font-size: 13px; padding: 6px 8px; }
+    .word-list-item .tran { display:none; }
+    .logo small { display:none; }
+    .status { font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+  <header>
+    <div class="logo">📘 英语词库浏览器 <small>v1.0</small></div>
+    <div class="toolbar">
+      <input type="file" id="fileInput" accept=".json" style="display:none">
+      <button class="btn" id="loadBtn">📁 加载词库</button>
+      <div class="mode-toggle" id="modeToggle">
+        <button data-mode="order" class="active">顺序</button>
+        <button data-mode="random">随机</button>
+      </div>
+      <button class="btn secondary" id="reloadBtn" disabled>↻ 重新打乱</button>
+      <div class="unit-filter-toggle" id="unitFilterToggle" title="打开后按年级+单元限定词汇范围；关闭则使用整个词库">
+        <span class="toggle-label">按单元筛选</span>
+        <span class="toggle-switch"><span class="toggle-knob"></span></span>
+      </div>
+      <select id="gradeSelect" class="sel" disabled title="选择年级"></select>
+      <select id="unitSelect" class="sel" disabled title="选择单元/学期"></select>
+      <div class="search-wrap" id="searchWrap">
+        <input type="text" id="searchInput" class="search-input" placeholder="🔍 搜索单词..." disabled autocomplete="off">
+        <div class="search-results" id="searchResults" hidden></div>
+      </div>
+    </div>
+    <div class="status" id="status">未加载词库</div>
+  </header>
+
+  <main>
+    <!-- Left column -->
+    <section class="col left">
+      <div class="col-head">
+        <span class="dot"></span>
+        左侧前缀匹配
+        <span class="count" id="leftCount">0</span>
+      </div>
+      <div class="prefix-hint" id="leftHint">点击单词字母，从整个词库检索以「光标左侧字母」为前缀的单词；点击列表项可预览</div>
+      <div class="col-body" id="leftList">
+        <div class="empty"><div class="big">⬅️</div>加载词库后，点击中间单词的字母</div>
+      </div>
+    </section>
+
+    <!-- Middle column -->
+    <section class="col middle">
+      <div class="word-stage">
+        <div class="word-controls">
+          <button class="btn-nav" id="prevBtn" title="上一个" disabled>‹</button>
+          <div class="word-display" id="wordDisplay">—</div>
+          <button class="btn-nav" id="nextBtn" title="下一个" disabled>›</button>
+          <button class="btn-speak" id="speakBtn" title="点击发音" disabled>🔊</button>
+        </div>
+        <div class="word-meta" id="wordMeta"></div>
+        <div class="word-hint" id="wordHint">点击单词字母 → 左列按前缀、右列按后缀检索词库；点击音标🔊可发音</div>
+      </div>
+      <div class="details" id="details">
+        <div class="empty"><div class="big">📖</div>加载词库并选择单词后，此处显示详细信息</div>
+      </div>
+    </section>
+
+    <!-- Right column -->
+    <section class="col right">
+      <div class="col-head">
+        <span class="dot"></span>
+        右侧后缀匹配
+        <span class="count" id="rightCount">0</span>
+      </div>
+      <div class="prefix-hint" id="rightHint">点击单词字母，从整个词库检索以「光标右侧字母」为后缀的单词；点击列表项可预览</div>
+      <div class="col-body" id="rightList">
+        <div class="empty"><div class="big">➡️</div>加载词库后，点击中间单词的字母</div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Placeholder overlay -->
+  <div class="placeholder-overlay" id="overlay">
+    <div class="big">📚</div>
+    <h2>加载词库文件开始</h2>
+    <p>点击下方按钮选择本地 JSON 词库文件（如 PEPXiaoXue.json）。词库为数组结构，每条记录含 headWord、释义、音标、短语、例句等字段。</p>
+    <div id="dropZone">
+      <button class="btn">📁 选择词库文件</button>
+      <p>或将 .json 文件拖放到此处</p>
+    </div>
+    <div class="file-formats">支持格式：[{ headWord, content.word.content.{trans, usphone, ukphone, phrase, sentence, ...} }]</div>
+  </div>
+
+<script src="tts/mespeak.full.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  // ===== State =====
+  let rawVocab = [];        // original full vocab loaded from file (untouched)
+  let activeVocab = [];     // current effective vocab (rawVocab or unit-filtered subset)
+  let orderList = [];       // current play order (indices into activeVocab)
+  let pos = -1;             // current position in orderList
+  let mode = "order";       // "order" | "random"
+  let cursorIdx = -1;       // clicked char index in current word
+  // preview state: when >=0, center column temporarily shows rawVocab[previewIdx]
+  // (set by clicking a left/right list item). Any prev/next/filter change resets it.
+  let previewIdx = -1;
+
+  // ===== IndexedDB cache (large vocab files exceed localStorage's ~5MB limit) =====
+  const IDB_NAME = "vocab-browser";
+  const IDB_VER = 1;
+  const IDB_STORE = "vocabFiles";   // key=filename, value={name, data, size, ts}
+  let _idb = null;
+  function openDB(){
+    if(_idb) return Promise.resolve(_idb);
+    return new Promise((resolve, reject)=>{
+      const req = indexedDB.open(IDB_NAME, IDB_VER);
+      req.onupgradeneeded = e => {
+        const db = e.target.result;
+        if(!db.objectStoreNames.contains(IDB_STORE)) db.createObjectStore(IDB_STORE);
+      };
+      req.onsuccess = ()=>{ _idb = req.result; resolve(_idb); };
+      req.onerror = ()=> reject(req.error);
+    });
+  }
+  async function idbPut(key, value){
+    try {
+      const db = await openDB();
+      return new Promise((resolve, reject)=>{
+        const tx = db.transaction(IDB_STORE, "readwrite");
+        tx.objectStore(IDB_STORE).put(value, key);
+        tx.oncomplete = ()=> resolve();
+        tx.onerror = ()=> reject(tx.error);
+      });
+    }catch(e){ /* IndexedDB unavailable (private mode) — skip caching */ }
+  }
+  async function idbGet(key){
+    try {
+      const db = await openDB();
+      return new Promise((resolve, reject)=>{
+        const tx = db.transaction(IDB_STORE, "readonly");
+        const req = tx.objectStore(IDB_STORE).get(key);
+        req.onsuccess = ()=> resolve(req.result);
+        req.onerror = ()=> reject(req.error);
+      });
+    }catch(e){ return null; }
+  }
+  async function idbKeys(){
+    try {
+      const db = await openDB();
+      return new Promise((resolve, reject)=>{
+        const tx = db.transaction(IDB_STORE, "readonly");
+        const req = tx.objectStore(IDB_STORE).getAllKeys();
+        req.onsuccess = ()=> resolve(req.result);
+        req.onerror = ()=> reject(req.error);
+      });
+    }catch(e){ return []; }
+  }
+  async function idbDelete(key){
+    try {
+      const db = await openDB();
+      return new Promise((resolve, reject)=>{
+        const tx = db.transaction(IDB_STORE, "readwrite");
+        tx.objectStore(IDB_STORE).delete(key);
+        tx.oncomplete = ()=> resolve();
+        tx.onerror = ()=> reject(tx.error);
+      });
+    }catch(e){}
+  }
+
+  // localStorage keys for session restore
+  const LS_LAST_VOCAB   = "lastVocabFile";     // filename of last loaded vocab
+  const LS_LAST_GRADE   = "lastGrade";         // last selected grade id
+  const LS_LAST_UNIT    = "lastUnit";          // last selected unit index (within grade)
+  const LS_LAST_FILTER  = "lastFilterByUnit";  // "1" | "0"
+  // unit filter state
+  let filterByUnit = false; // toggle: true = filter by grade+unit, false = whole vocab
+  let currentUnitData = null;   // unit word list (qwerty-learner simplified format)
+  let currentUnitFile = null;   // unit filename, e.g. "PEPXiaoXue3_1_T.json"
+  let currentUnitLabel = "";   // human label, e.g. "小学3年级 · 上学期"
+  // in-active lookup (rebuilt whenever activeVocab changes):
+  //   activeHeadSet: lowercase headwords present in activeVocab (center column scope)
+  //   activeHeadToIdx: lowercase headword → activeVocab index (first occurrence)
+  // Left/right lists search rawVocab but tag each item as in/out of unit using these.
+  let activeHeadSet = new Set();
+  let activeHeadToIdx = Object.create(null);
+
+  // ===== Textbook catalog (人教版 PEP, covers 小学3年级→高三) =====
+  // Data source: RealKai42/qwerty-learner public/dicts/*.json (per-unit simplified vocab files)
+  // Loading priority: localStorage cache → local dicts/{file} → GitHub raw (online latest)
+  const GH_RAW_BASE = "https://raw.githubusercontent.com/RealKai42/qwerty-learner/master/public/dicts/";
+  const LS_PREFIX = "pep_unit:";
+  // each grade maps to a list of units [{file, name}]
+  const CATALOG = [
+    { id:"x3", label:"小学3年级", series:"PEPXiaoXue3",
+      units:[ {f:"PEPXiaoXue3_1_T",n:"上学期"}, {f:"PEPXiaoXue3_2_T",n:"下学期"} ] },
+    { id:"x4", label:"小学4年级", series:"PEPXiaoXue4",
+      units:[ {f:"PEPXiaoXue4_1_T",n:"上学期"}, {f:"PEPXiaoXue4_2_T",n:"下学期"} ] },
+    { id:"x5", label:"小学5年级", series:"PEPXiaoXue5",
+      units:[ {f:"PEPXiaoXue5_1_T",n:"上学期"}, {f:"PEPXiaoXue5_2_T",n:"下学期"} ] },
+    { id:"x6", label:"小学6年级", series:"PEPXiaoXue6",
+      units:[ {f:"PEPXiaoXue6_1_T",n:"上学期"}, {f:"PEPXiaoXue6_2_T",n:"下学期"} ] },
+    { id:"c7", label:"初一(7年级)", series:"PEPChuZhong7",
+      units:[ {f:"PEPChuZhong7_1_T",n:"上学期"}, {f:"PEPChuZhong7_2_T",n:"下学期"} ] },
+    { id:"c8", label:"初二(8年级)", series:"PEPChuZhong8",
+      units:[ {f:"PEPChuZhong8_1_T",n:"上学期"}, {f:"PEPChuZhong8_2_T",n:"下学期"} ] },
+    { id:"c9", label:"初三(9年级)", series:"PEPChuZhong9",
+      units:[ {f:"PEPChuZhong9_1_T",n:"全一册"} ] },
+    { id:"g",  label:"高中(模块1-11)", series:"PEPGaoZhong",
+      units:[1,2,3,4,5,6,7,8,9,10,11].map(n=>({f:`PEPGaoZhong_${n}_T`,n:`模块${n}`})) }
+  ];
+
+  // populate grade dropdown
+  function initGradeSelect(){
+    const sel = $("gradeSelect");
+    const groups = [
+      { lab:"小学", ids:["x3","x4","x5","x6"] },
+      { lab:"初中", ids:["c7","c8","c9"] },
+      { lab:"高中", ids:["g"] }
+    ];
+    let html = "";
+    groups.forEach(g=>{
+      html += `<optgroup label="${g.lab}">`;
+      g.ids.forEach(id=>{
+        const cat = CATALOG.find(c=>c.id===id);
+        if(cat) html += `<option value="${cat.id}">${cat.label}</option>`;
+      });
+      html += `</optgroup>`;
+    });
+    sel.innerHTML = html;
+    sel.value = "x3";
+  }
+  // populate unit dropdown based on current grade
+  function refreshUnitSelect(){
+    const sel = $("unitSelect");
+    const cat = CATALOG.find(c=>c.id===$("gradeSelect").value);
+    if(!cat){ sel.innerHTML = ""; return; }
+    sel.innerHTML = cat.units.map((u,i)=>`<option value="${i}">${u.n}</option>`).join("");
+    sel.value = 0;
+  }
+
+  // load unit file (cache → local → online)
+  async function loadUnitFile(filename){
+    const cacheKey = LS_PREFIX + filename;
+    // 1. localStorage cache
+    try{
+      const cached = localStorage.getItem(cacheKey);
+      if(cached){
+        try{ return JSON.parse(cached); }catch(e){ localStorage.removeItem(cacheKey); }
+      }
+    }catch(e){}
+    // 2. local dicts/ folder (same-origin fetch; works under file:// and http://)
+    try{
+      const r = await fetch("dicts/" + filename);
+      if(r.ok){
+        const text = await r.text();
+        try{ const data = JSON.parse(text); cacheUnit(cacheKey, data); return data; }catch(e){}
+      }
+    }catch(e){}
+    // 3. online GitHub raw (latest)
+    try{
+      const r = await fetch(GH_RAW_BASE + filename);
+      if(r.ok){
+        const data = await r.json();
+        cacheUnit(cacheKey, data);
+        return data;
+      }
+    }catch(e){}
+    return null;
+  }
+  function cacheUnit(key, data){
+    try{
+      // localStorage quota is small (~5MB); each unit file < 100KB, safe
+      localStorage.setItem(key, JSON.stringify(data));
+    }catch(e){ /* quota exceeded — skip caching, still works in-memory */ }
+  }
+
+  // build activeVocab: unit-filtered (matching full vocab entries + fallback stubs) or whole rawVocab
+  function rebuildActiveVocab(){
+    if(!filterByUnit || !currentUnitData || !currentUnitData.length){
+      activeVocab = rawVocab;
+    } else {
+      // index rawVocab by lowercase headword for fast lookup (keeps detailed fields: phrase/sentence/syno…)
+      const byHead = Object.create(null);
+      rawVocab.forEach(w=>{
+        const h = getHead(w).toLowerCase();
+        if(h && !byHead[h]) byHead[h] = w;  // first occurrence wins
+      });
+      activeVocab = currentUnitData.map((uw,i)=>{
+        const name = (uw.name||"").trim();
+        const full = byHead[name.toLowerCase()];
+        if(full) return full;  // use full entry (with phrase/sentence/syno/relWord)
+        // fallback stub: build a vocab-shaped object from simplified unit data
+        return {
+          headWord: name,
+          wordRank: i+1,
+          bookId: "PEP-unit",
+          content: { word: { content: {
+            trans: (uw.trans||[]).map(t=>({ tranCn: t })),
+            usphone: uw.usphone || "",
+            ukphone: uw.ukphone || "",
+            ukspeech: name + "&type=1",
+            usspeech: name + "&type=2",
+            phrase: null, sentence: null, syno: null, relWord: null, remMethod: null
+          } } }
+        };
+      });
+    }
+    // build in-active lookup maps so left/right list items can be tagged
+    // "in current unit" (clickable to jump) vs "out of unit" (greyed)
+    activeHeadSet = new Set();
+    activeHeadToIdx = Object.create(null);
+    activeVocab.forEach((w,idx)=>{
+      const h = getHead(w).toLowerCase();
+      if(h && !activeHeadSet.has(h)){
+        activeHeadSet.add(h);
+        activeHeadToIdx[h] = idx;
+      }
+    });
+    buildIndex();
+    setMode(mode);
+    pos = -1;
+    previewIdx = -1;       // reset preview when scope changes
+    next();
+    updateStatus();
+  }
+
+  // sorted word index for prefix search: array of {w, idx}
+  let sortedIndex = [];
+  // reversed-sorted index for suffix search: array of {rw(reversed), w, idx}
+  let suffixIndex = [];
+  // lowercase headword → rawVocab index (first occurrence); for list-item highlight
+  let rawHeadToIdx = Object.create(null);
+
+  const $ = id => document.getElementById(id);
+  const escapeHtml = s => String(s).replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+
+  // ===== Pronunciation (offline meSpeak primary, Web Speech fallback) =====
+  // meSpeak = espeak asm.js port, runs in-browser, no system voice needed.
+  // Voices: en/en-us (美), en/en-rp (英). Config + voices loaded via fetch.
+  let meSpeakReady = false;
+  const meSpeakVoices = { "en/en-us": false, "en/en-rp": false };
+  function initMeSpeak(){
+    if(typeof meSpeak === "undefined"){ return; }
+    meSpeakReady = true;
+    if(typeof meSpeak.loadConfig !== "function"){ return; }
+    fetch("tts/mespeak_config.json")
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(o => { meSpeak.loadConfig(o); loadAllVoices(); })
+      .catch(()=>{});
+  }
+  function loadAllVoices(){
+    [["tts/voices/en/en-us.json","en/en-us"],["tts/voices/en/en-rp.json","en/en-rp"]].forEach(([url,id])=>{
+      fetch(url).then(r=>r.ok?r.json():Promise.reject()).then(o=>{
+        try{ meSpeak.loadVoice(o); meSpeakVoices[id]=true; }catch(e){}
+      }).catch(()=>{});
+    });
+  }
+  // play WAV ArrayBuffer via AudioContext (most reliable; re-entrant)
+  let _ac = null;
+  function getAC(){
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return null;
+    if(!_ac) _ac = new AC();
+    if(_ac.state === "suspended") _ac.resume();
+    return _ac;
+  }
+  function playWav(ab){
+    const ctx = getAC();
+    const fb = ()=>{ try{ const a=new Audio(URL.createObjectURL(new Blob([ab],{type:"audio/wav"}))); a.play().catch(()=>{}); }catch(e){} };
+    if(!ctx){ fb(); return; }
+    try{
+      ctx.decodeAudioData(ab.slice(0)).then(b=>{
+        const s=ctx.createBufferSource(); s.buffer=b; s.connect(ctx.destination); s.start(0);
+      }).catch(()=>fb());
+    }catch(e){ fb(); }
+  }
+  // accent ('us'|'uk') -> meSpeak voice id
+  function accentVoice(accent){ return accent==="uk" ? "en/en-rp" : "en/en-us"; }
+  // primary offline synth; returns true if played
+  function speakWithMeSpeak(text, accent){
+    if(!meSpeakReady) return false;
+    if(typeof meSpeak.isConfigLoaded === "function" && !meSpeak.isConfigLoaded()) return false;
+    const vid = accentVoice(accent);
+    if(!meSpeakVoices[vid]) return false;
+    try{
+      const wav = meSpeak.speak(text, { voice: vid, speed: 175, pitch: 50, rawdata: true });
+      if(!wav) return false;
+      playWav(wav);
+      return true;
+    }catch(e){ return false; }
+  }
+  // fallback Web Speech
+  function speakWithWebSpeech(text, accent){
+    if(!('speechSynthesis' in window) || !text) return false;
+    try{
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = accent==="uk" ? "en-GB" : "en-US";
+      u.rate = 0.9; u.pitch = 1;
+      const voices = window.speechSynthesis.getVoices();
+      const want = accent==="uk" ? /en[-_]GB/i : /en[-_]US/i;
+      const v = voices.find(x=>want.test(x.lang)) || voices.find(x=>/^en/i.test(x.lang));
+      if(v) u.voice = v;
+      window.speechSynthesis.speak(u);
+      return true;
+    }catch(e){ return false; }
+  }
+  // Youdao online pronunciation (works under file:// since it's a plain <audio> GET, no fetch/CORS needed)
+  let _youdaoAudio = null;
+  function speakWithYoudao(text, accent){
+    if(!text) return false;
+    try{
+      // type=1 英音, type=2 美音 (matches current en-rp/en-us mapping)
+      const type = accent === "uk" ? 1 : 2;
+      const url = "https://dict.youdao.com/dictvoice?audio=" + encodeURIComponent(text) + "&type=" + type;
+      // reuse single Audio instance to avoid overlapping playback on rapid clicks
+      if(_youdaoAudio){ try{ _youdaoAudio.pause(); }catch(e){} }
+      _youdaoAudio = new Audio(url);
+      // fire-and-forget; user-gesture click satisfies autoplay policy
+      const p = _youdaoAudio.play();
+      if(p && typeof p.catch === "function") p.catch(()=>{});
+      return true;
+    }catch(e){ return false; }
+  }
+  // public speak:
+  //   - file:// open → Youdao online first (offline engine can't load from file://)
+  //   - http(s) open → offline meSpeak first, Web Speech fallback, Youdao last-resort
+  let _msgTimer = null;
+  function speak(text, accent){
+    text = (text||"").trim();
+    if(!text) return;
+    if(location.protocol === "file:"){
+      if(speakWithYoudao(text, accent)) return;
+      if(speakWithWebSpeech(text, accent)) return;
+      showPronounceStatus();
+      return;
+    }
+    if(speakWithMeSpeak(text, accent)) return;
+    if(speakWithWebSpeech(text, accent)) return;
+    if(speakWithYoudao(text, accent)) return;
+    showPronounceStatus();
+  }
+  function showPronounceStatus(){
+    const hint = $("wordHint");
+    if(!hint || hint.dataset.loading) return;
+    hint.dataset.loading = "1";
+    hint.dataset.orig = hint.textContent;
+    hint.textContent = "🔊 离线发音库加载中，请稍候再点…";
+    hint.style.color = "#d97706";
+    if(_msgTimer) clearTimeout(_msgTimer);
+    _msgTimer = setTimeout(()=>{ hint.textContent = hint.dataset.orig || ""; hint.style.color=""; delete hint.dataset.loading; }, 2000);
+  }
+  // boot offline engine now (script tag above already loaded meSpeak)
+  initMeSpeak();
+
+  // ===== Extract helpers (tolerant to field shape) =====
+  function getHead(w){ return (w && w.headWord) || (w && w.content && w.content.word && w.content.word.wordHead) || ""; }
+  function getContent(w){
+    try { return w.content.word.content; } catch(e){ return null; }
+  }
+  function getTrans(w){
+    const c = getContent(w);
+    if(!c || !c.trans) return [];
+    return c.trans.map(t => ({ cn: t.tranCn||"", en: t.tranOther||"" }));
+  }
+  function getPhones(w){
+    const c = getContent(w) || {};
+    return { us: c.usphone||c.phone||"", uk: c.ukphone||c.phone||"" };
+  }
+  function getPhrases(w){
+    const c = getContent(w);
+    if(!c || !c.phrase || !c.phrase.phrases) return [];
+    return c.phrase.phrases.map(p => ({ p: p.pContent||"", cn: p.pCn||"" }));
+  }
+  function getSentences(w){
+    const c = getContent(w);
+    if(!c || !c.sentence || !c.sentence.sentences) return [];
+    return c.sentence.sentences.map(s => ({ en: s.sContent||"", cn: s.sCn||"" }));
+  }
+  function getSyno(w){
+    const c = getContent(w);
+    if(!c || !c.syno || !c.synos) return [];
+    return c.synos.map(s => ({ pos: s.pos||"", tran: s.tran||"", words: (s.hwds||[]).map(h=>h.w||"") }));
+  }
+  function getRel(w){
+    const c = getContent(w);
+    if(!c || !c.relWord || !c.rels) return [];
+    return c.rels.map(r => ({ pos: r.pos||"", words: (r.words||[]).map(x=>({w:x.hwd||"", t:x.tran||""})) }));
+  }
+  function getRem(w){
+    const c = getContent(w);
+    if(!c || !c.remMethod) return "";
+    return c.remMethod.val || "";
+  }
+  function getRank(w){ return w.wordRank || 0; }
+  function getBookId(w){ return w.bookId || ""; }
+
+  // part of speech: collect distinct pos from syno (word's own), fallback to relWord
+  function getPos(w){
+    const c = getContent(w);
+    if(!c) return "";
+    const list = [];
+    if(c.syno && c.syno.synos){
+      c.syno.synos.forEach(s => { if(s.pos && list.indexOf(s.pos)<0) list.push(s.pos); });
+    }
+    if(list.length) return list.join("/");
+    if(c.relWord && c.relWord.rels && c.relWord.rels.length){
+      return c.relWord.rels[0].pos || "";
+    }
+    return "";
+  }
+
+  // short translation for list view
+  function shortTran(w){
+    const t = getTrans(w);
+    if(t.length) return t[0].cn;
+    return "";
+  }
+
+  // ===== Loading =====
+  // load parsed vocab data into the app (shared by file-load and cache-restore paths)
+  function loadVocabData(data, filename){
+    rawVocab = data;
+    activeVocab = rawVocab;
+    buildIndex();
+    setMode(mode); // rebuild orderList
+    $("overlay").style.display = "none";
+    $("loadBtn").textContent = "📂 " + (filename || "重新加载");
+    $("searchInput").disabled = false;
+    $("gradeSelect").disabled = false;
+    $("unitSelect").disabled = false;
+    updateStatus();
+    next(); // load first word
+  }
+
+  function handleFile(file){
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = async e => {
+      try {
+        const text = e.target.result;
+        const data = JSON.parse(text);
+        if(!Array.isArray(data)) throw new Error("词库根节点不是数组");
+        // cache the file content to IndexedDB (so refresh can restore without re-pick)
+        await idbPut(file.name, { name: file.name, data: text, size: file.size, ts: Date.now() });
+        localStorage.setItem(LS_LAST_VOCAB, file.name);
+        loadVocabData(data, file.name);
+        // restore unit filter state if previously on
+        await restoreUnitFilterState();
+      } catch(err){
+        alert("解析失败：" + err.message + "\n请确认文件为合法 JSON 词库数组。");
+      }
+    };
+    reader.onerror = ()=> alert("读取文件失败");
+    reader.readAsText(file, "utf-8");
+  }
+
+  // ===== Cache restore on page load =====
+  // 1. read last vocab filename from localStorage
+  // 2. fetch its cached content from IndexedDB
+  // 3. load it (skip file picker) + restore unit filter state
+  async function restoreFromCache(){
+    if(!("indexedDB" in window)) return false;
+    const lastName = localStorage.getItem(LS_LAST_VOCAB);
+    if(!lastName) return false;
+    const cached = await idbGet(lastName);
+    if(!cached || !cached.data) return false;
+    try {
+      const data = JSON.parse(cached.data);
+      if(!Array.isArray(data)) return false;
+      loadVocabData(data, lastName);
+      await restoreUnitFilterState();
+      flashStatus(`已从缓存恢复词库「${escapeHtml(lastName)}」（${data.length} 词）`);
+      return true;
+    } catch(e){ return false; }
+  }
+
+  // restore grade/unit/toggle state and re-apply unit filter if it was on
+  async function restoreUnitFilterState(){
+    const savedGrade = localStorage.getItem(LS_LAST_GRADE);
+    const savedUnit  = localStorage.getItem(LS_LAST_UNIT);
+    const savedFilter= localStorage.getItem(LS_LAST_FILTER);
+    const gSel = $("gradeSelect"), uSel = $("unitSelect");
+    if(savedGrade){
+      gSel.value = savedGrade;
+      refreshUnitSelect();
+      if(savedUnit!==null){
+        const maxU = (gSel.selectedOptions[0] ? CATALOG.find(c=>c.id===gSel.value).units.length : 0) || 0;
+        uSel.value = Math.min(parseInt(savedUnit,10)||0, Math.max(0, maxU-1));
+      }
+    }
+    if(savedFilter === "1"){
+      filterByUnit = true;
+      $("unitFilterToggle").classList.add("on");
+      await applyUnitSelection(true);   // load unit file (cache → local → online) and rebuild
+    }
+  }
+
+  // build sorted index for fast prefix search (based on activeVocab)
+  // build sorted index for prefix/suffix search.
+  // IMPORTANT: indexes are always built from the WHOLE rawVocab, so left/right
+  // lists always search across the entire vocabulary regardless of unit filter.
+  // The unit filter only restricts which words appear in the center column.
+  function buildIndex(){
+    sortedIndex = rawVocab.map((w,idx)=>({ w: getHead(w).toLowerCase(), idx })).filter(x=>x.w);
+    sortedIndex.sort((a,b)=> a.w.localeCompare(b.w));
+    // suffix index: sort by reversed string so suffix search = prefix search on reversed
+    suffixIndex = rawVocab.map((w,idx)=>{
+      const w0 = getHead(w).toLowerCase();
+      return { rw: w0.split("").reverse().join(""), w: w0, idx };
+    }).filter(x=>x.w);
+    suffixIndex.sort((a,b)=> a.rw.localeCompare(b.rw));
+    // headword → rawVocab index map (first occurrence wins), so the center column's
+    // current word can be located in the raw index for list-item highlighting.
+    rawHeadToIdx = Object.create(null);
+    rawVocab.forEach((w,idx)=>{
+      const h = getHead(w).toLowerCase();
+      if(h && rawHeadToIdx[h]===undefined) rawHeadToIdx[h] = idx;
+    });
+  }
+
+  // prefix search returns array of indices
+  function prefixSearch(prefix){
+    if(!prefix){ return []; }
+    prefix = prefix.toLowerCase();
+    // binary search lower bound
+    const lo = lowerBound(sortedIndex, prefix, e => e.w);
+    const res = [];
+    for(let i=lo;i<sortedIndex.length;i++){
+      if(!sortedIndex[i].w.startsWith(prefix)) break;
+      res.push(sortedIndex[i].idx);
+    }
+    return res;
+  }
+  // suffix search: words ENDING with `suffix`. Done via reversed index.
+  function suffixSearch(suffix){
+    if(!suffix){ return []; }
+    const r = suffix.toLowerCase().split("").reverse().join("");
+    const lo = lowerBound(suffixIndex, r, e => e.rw);
+    const res = [];
+    for(let i=lo;i<suffixIndex.length;i++){
+      if(!suffixIndex[i].rw.startsWith(r)) break;
+      res.push(suffixIndex[i].idx);
+    }
+    return res;
+  }
+  // generic lower bound: first index where getVal(arr[i]) >= target
+  function lowerBound(arr, target, getVal){
+    let l=0, r=arr.length;
+    while(l<r){
+      const m=(l+r)>>1;
+      if(getVal(arr[m]) < target) l=m+1; else r=m;
+    }
+    return l;
+  }
+
+  // ===== Order / navigation =====
+  function setMode(m){
+    mode = m;
+    document.querySelectorAll("#modeToggle button").forEach(b=>{
+      b.classList.toggle("active", b.dataset.mode===m);
+    });
+    if(activeVocab.length===0) return;
+    if(m==="order"){
+      orderList = activeVocab.map((_,i)=>i);
+      $("reloadBtn").disabled = true;
+    } else {
+      orderList = activeVocab.map((_,i)=>i);
+      // Fisher-Yates shuffle
+      for(let i=orderList.length-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [orderList[i],orderList[j]] = [orderList[j],orderList[i]];
+      }
+      $("reloadBtn").disabled = false;
+    }
+    pos = -1;
+    previewIdx = -1;       // reshuffle/order change exits preview
+  }
+
+  function showCurrent(){
+    // preview mode (clicked a left/right list item): show that rawVocab word
+    if(previewIdx>=0 && previewIdx<rawVocab.length){
+      const w = rawVocab[previewIdx];
+      renderWord(w, true);
+      renderDetails(w);
+      cursorIdx = -1;
+      renderPrefixLists();
+      return;
+    }
+    if(pos<0 || pos>=orderList.length){ return; }
+    const idx = orderList[pos];
+    const w = activeVocab[idx];
+    renderWord(w, false);
+    renderDetails(w);
+    cursorIdx = -1;
+    renderPrefixLists();
+  }
+
+  function next(){
+    if(!orderList.length) return;
+    previewIdx = -1;            // exit preview; next/prev operate on the filtered scope
+    pos++;
+    if(pos>=orderList.length) pos = 0;
+    showCurrent();
+  }
+  function prev(){
+    if(!orderList.length) return;
+    previewIdx = -1;            // exit preview
+    pos--;
+    if(pos<0) pos = orderList.length-1;
+    showCurrent();
+  }
+
+  // ===== Word search =====
+  let searchActiveIdx = -1;   // highlighted item in dropdown
+  let searchResultsCache = [];
+
+  function searchVocab(q){
+    q = (q||"").trim().toLowerCase();
+    if(!q || !activeVocab.length) return [];
+    const starts = [], contains = [];
+    for(let i=0;i<activeVocab.length;i++){
+      const h = getHead(activeVocab[i]).toLowerCase();
+      if(!h) continue;
+      if(h.startsWith(q)) starts.push(i);
+      else if(h.indexOf(q)>=0) contains.push(i);
+    }
+    // prefix matches first (alphabetical), then contains (alphabetical)
+    starts.sort((a,b)=> getHead(activeVocab[a]).toLowerCase().localeCompare(getHead(activeVocab[b]).toLowerCase()));
+    contains.sort((a,b)=> getHead(activeVocab[a]).toLowerCase().localeCompare(getHead(activeVocab[b]).toLowerCase()));
+    return starts.concat(contains).slice(0, 30);
+  }
+
+  function highlightMatch(head, q){
+    const lower = head.toLowerCase();
+    const idx = lower.indexOf(q.toLowerCase());
+    if(idx<0) return escapeHtml(head);
+    return escapeHtml(head.substring(0, idx))
+      + `<mark>${escapeHtml(head.substring(idx, idx+q.length))}</mark>`
+      + escapeHtml(head.substring(idx+q.length));
+  }
+
+  function renderSearchResults(results, q){
+    const box = $("searchResults");
+    searchResultsCache = results;
+    searchActiveIdx = results.length ? 0 : -1;
+    if(!results.length){
+      box.innerHTML = `<div class="search-empty">无匹配单词</div>`;
+      box.hidden = false;
+      return;
+    }
+    box.innerHTML = results.map((vidx,n)=>{
+      const w = activeVocab[vidx];
+      const head = getHead(w);
+      const p = getPos(w) || "—";
+      const tran = shortTran(w);
+      return `<div class="search-item${n===0?" active":""}" data-vidx="${vidx}" data-n="${n}">
+        <span class="s-pos">${escapeHtml(p)}</span>
+        <span class="s-word">${highlightMatch(head, q)}</span>
+        <span class="s-tran">${escapeHtml(tran)}</span>
+      </div>`;
+    }).join("");
+    box.hidden = false;
+  }
+
+  function closeSearch(){
+    $("searchResults").hidden = true;
+    $("searchResults").innerHTML = "";
+    searchResultsCache = [];
+    searchActiveIdx = -1;
+  }
+
+  function jumpToVidx(vidx){
+    if(vidx==null || vidx<0 || vidx>=activeVocab.length) return;
+    // find position of vidx inside current orderList
+    let p = orderList.indexOf(vidx);
+    if(p<0){ // not in current order (shouldn't happen, orderList covers all)
+      p = 0;
+    }
+    pos = p;
+    previewIdx = -1;       // search jump navigates within filtered scope; exit preview
+    showCurrent();
+    closeSearch();
+    $("searchInput").value = getHead(activeVocab[vidx]);
+    $("searchInput").blur();
+  }
+
+  function moveSearchActive(delta){
+    if(!searchResultsCache.length) return;
+    searchActiveIdx = (searchActiveIdx + delta + searchResultsCache.length) % searchResultsCache.length;
+    const items = $("searchResults").querySelectorAll(".search-item");
+    items.forEach((it,n)=> it.classList.toggle("active", n===searchActiveIdx));
+    const active = items[searchActiveIdx];
+    if(active && active.scrollIntoView) active.scrollIntoView({ block: "nearest" });
+  }
+
+  // ===== Rendering =====
+  function renderWord(w, isPreview){
+    const head = getHead(w);
+    const disp = $("wordDisplay");
+    disp.innerHTML = "";
+    if(!head){ disp.textContent = "—"; $("wordMeta").textContent=""; return; }
+    [...head].forEach((ch,i)=>{
+      const span = document.createElement("span");
+      span.className = "char";
+      span.textContent = ch;
+      span.dataset.idx = i;
+      span.title = `位置 ${i+1}/${head.length}`;
+      span.addEventListener("click", ()=> setCursor(i));
+      span.addEventListener("mouseenter", ()=> setCursor(i));
+      disp.appendChild(span);
+    });
+    if(isPreview){
+      $("wordMeta").innerHTML = `<span style="color:#d97706">👓 预览</span>  ·  #${getRank(w)}  ·  ${getBookId(w)}  ·  <span style="color:var(--text-muted)">来自整库（不在当前筛选范围，按 上一个/下一个 回到范围）</span>`;
+    } else {
+      $("wordMeta").textContent = `#${getRank(w)}  ·  ${getBookId(w)}  ·  ${pos+1}/${orderList.length}`;
+    }
+    $("prevBtn").disabled = orderList.length<2;
+    $("nextBtn").disabled = orderList.length<2;
+    $("speakBtn").disabled = !head;
+    $("speakBtn").dataset.word = head;
+  }
+
+  function setCursor(i){
+    cursorIdx = i;
+    document.querySelectorAll("#wordDisplay .char").forEach((el,k)=>{
+      el.classList.toggle("active", k===i);
+    });
+    renderPrefixLists();
+  }
+
+  function renderPrefixLists(){
+    // in preview mode, lists search/highlight against the previewed word;
+    // otherwise against the current orderList position's word.
+    const dispHead = previewIdx>=0 && previewIdx<rawVocab.length
+      ? getHead(rawVocab[previewIdx])
+      : getHead(activeVocab[orderList[pos]] || {});
+    if(cursorIdx<0 || !dispHead){
+      $("leftHint").textContent = "点击单词字母，从整个词库检索以「光标左侧字母」为前缀的单词";
+      $("rightHint").textContent = "点击单词字母，从整个词库检索以「光标右侧字母」为后缀的单词";
+      $("leftList").innerHTML = emptyList("点击字母");
+      $("rightList").innerHTML = emptyList("点击字母");
+      $("leftCount").textContent = "0";
+      $("rightCount").textContent = "0";
+      return;
+    }
+    // 左侧字母 = head[0 .. cursorIdx]  (含光标所在字母) -> 前缀匹配
+    // 右侧字母 = head[cursorIdx .. end] (含光标所在字母) -> 后缀匹配
+    const leftPrefix = dispHead.substring(0, cursorIdx+1);
+    const rightSuffix = dispHead.substring(cursorIdx);
+    $("leftHint").innerHTML = `前缀 = <b>${escapeHtml(leftPrefix)}</b> （光标左侧字母，含当前字母）`;
+    $("rightHint").innerHTML = `后缀 = <b>${escapeHtml(rightSuffix)}</b> （光标右侧字母，含当前字母）`;
+
+    const leftIdxs = prefixSearch(leftPrefix);
+    const rightIdxs = suffixSearch(rightSuffix);
+    $("leftCount").textContent = leftIdxs.length;
+    $("rightCount").textContent = rightIdxs.length;
+
+    // map current center-column word to its rawVocab index for list highlighting.
+    // (stub words not in rawVocab get -1 → no item highlighted, which is correct.)
+    const curIdx0 = rawHeadToIdx[dispHead.toLowerCase()];
+    const curIdx = curIdx0===undefined ? -1 : curIdx0;
+    $("leftList").innerHTML = renderList(leftIdxs, leftPrefix, curIdx, "left");
+    $("rightList").innerHTML = renderList(rightIdxs, rightSuffix, curIdx, "right");
+  }
+
+  function renderList(idxs, prefix, currentIdx, side){
+    if(!idxs.length) return emptyList("无匹配单词");
+    const limit = 500;
+    let html = "";
+    idxs.forEach((vidx,n)=>{
+      if(n>=limit){ html += `<div class="word-list-item" style="justify-content:center;color:var(--text-muted)">… 仅显示前 ${limit} 条</div>`; return; }
+      const w = rawVocab[vidx];
+      const head = getHead(w);
+      const tran = shortTran(w);
+      const pos = getPos(w);
+      // highlight prefix portion
+      const marked = highlightPrefix(head, prefix, side);
+      const isCurrent = vidx===currentIdx;
+      html += `<div class="word-list-item${isCurrent?" current":""}" data-vidx="${vidx}">
+        <span class="rank">${n+1}</span>
+        <span class="pos${pos?"":" none"}" title="词性">${pos?escapeHtml(pos):"—"}</span>
+        <span class="w">${marked}</span>
+        <span class="tran">${escapeHtml(tran)}</span>
+      </div>`;
+    });
+    return html;
+  }
+  function highlightPrefix(head, query, side){
+    // left: highlight leading prefix; right: highlight trailing suffix
+    const qlen = query.length;
+    if(qlen===0) return escapeHtml(head);
+    if(qlen >= head.length) return `<mark>${escapeHtml(head)}</mark>`;
+    if(side === "right"){
+      const rest = head.substring(0, head.length - qlen);
+      const tail = head.substring(head.length - qlen);
+      return `${escapeHtml(rest)}<mark>${escapeHtml(tail)}</mark>`;
+    }
+    const first = head.substring(0, qlen);
+    const rest = head.substring(qlen);
+    return `<mark>${escapeHtml(first)}</mark>${escapeHtml(rest)}`;
+  }
+  function emptyList(msg){
+    return `<div class="empty"><div class="big">🔍</div>${escapeHtml(msg)}</div>`;
+  }
+
+  function renderDetails(w){
+    const d = $("details");
+    const head = getHead(w);
+    const phones = getPhones(w);
+    const trans = getTrans(w);
+    const phrases = getPhrases(w);
+    const sents = getSentences(w);
+    const synos = getSyno(w);
+    const rels = getRel(w);
+    const rem = getRem(w);
+
+    let html = "";
+
+    // part of speech
+    const pos = getPos(w);
+    html += `<div class="detail-section"><h4><span class="icon">🏷️</span>词性</h4><div style="font-size:15px;">${pos?`<span class="pos-badge">${escapeHtml(pos)}</span>`:`<span class="pos-badge none">未标注</span>`}<span style="color:var(--text-muted);font-size:12px;">该单词在词库中标注的词性</span></div></div>`;
+
+    // phonetic
+    if(phones.us || phones.uk){
+      html += `<div class="detail-section"><h4><span class="icon">🔊</span>音标 <span style="font-size:11px;color:var(--text-muted);font-weight:400;text-transform:none;letter-spacing:0;">（点击发音：英=英式RP，美=美式）</span></h4><div class="phone-row">`;
+      if(phones.uk) html += `<div class="phone-item phone-clickable" data-speak="${escapeHtml(head)}" data-accent="uk" title="点击英式发音"><span class="label">英</span><span class="val">/${escapeHtml(phones.uk)}/</span></div>`;
+      if(phones.us) html += `<div class="phone-item phone-clickable" data-speak="${escapeHtml(head)}" data-accent="us" title="点击美式发音"><span class="label">美</span><span class="val">/${escapeHtml(phones.us)}/</span></div>`;
+      html += `</div></div>`;
+    }
+
+    // translation
+    if(trans.length){
+      html += `<div class="detail-section"><h4><span class="icon">📝</span>释义</h4><div class="trans-list">`;
+      trans.forEach(t=>{
+        html += `<div class="trans-item"><div class="cn">${escapeHtml(t.cn)}</div>`;
+        if(t.en) html += `<div class="en">${escapeHtml(t.en)}</div>`;
+        html += `</div>`;
+      });
+      html += `</div></div>`;
+    }
+
+    // phrases
+    if(phrases.length){
+      html += `<div class="detail-section"><h4><span class="icon">🔗</span>常用短语</h4><div class="phrase-grid">`;
+      phrases.forEach(p=>{
+        html += `<div class="phrase-item"><span class="p">${escapeHtml(p.p)}</span><span class="c">${escapeHtml(p.cn)}</span></div>`;
+      });
+      html += `</div></div>`;
+    }
+
+    // sentences
+    if(sents.length){
+      html += `<div class="detail-section"><h4><span class="icon">💬</span>例句</h4>`;
+      sents.forEach(s=>{
+        html += `<div class="sentence-item"><div class="en">${escapeHtml(s.en)}</div><div class="cn">${escapeHtml(s.cn)}</div></div>`;
+      });
+      html += `</div></div>`;
+    }
+
+    // syno
+    if(synos.length){
+      html += `<div class="detail-section"><h4><span class="icon">🔄</span>同近词</h4>`;
+      synos.forEach(s=>{
+        html += `<div class="syno-item"><span class="pos">${escapeHtml(s.pos)}.</span><span class="tran">${escapeHtml(s.tran)}</span></div>`;
+        if(s.words.length) html += `<div style="margin-left:24px;color:var(--text-muted);font-size:12px;">${s.words.map(x=>escapeHtml(x)).join(", ")}</div>`;
+      });
+      html += `</div></div>`;
+    }
+
+    // relWord
+    if(rels.length){
+      html += `<div class="detail-section"><h4><span class="icon">🌱</span>同根词</h4>`;
+      rels.forEach(r=>{
+        html += `<div class="rel-item"><span class="pos">${escapeHtml(r.pos)}.</span></div>`;
+        r.words.forEach(x=>{
+          html += `<div style="margin-left:24px;font-size:13px;"><b style="font-family:monospace;">${escapeHtml(x.w)}</b> <span style="color:var(--text-muted)">${escapeHtml(x.t)}</span></div>`;
+        });
+      });
+      html += `</div></div>`;
+    }
+
+    // remMethod
+    if(rem){
+      html += `<div class="detail-section"><h4><span class="icon">🧠</span>记忆法</h4><div style="font-size:14px;color:var(--text);line-height:1.6;background:#f8fafc;padding:8px 12px;border-radius:6px;">${escapeHtml(rem)}</div></div>`;
+    }
+
+    if(!html) html = `<div class="empty"><div class="big">📄</div>该单词无详细信息</div>`;
+    d.innerHTML = html;
+    d.scrollTop = 0;
+  }
+
+  function updateStatus(){
+    if(!rawVocab.length){ $("status").textContent = "未加载词库"; return; }
+    const scope = filterByUnit
+      ? `<span class="scope-tag">${escapeHtml(currentUnitLabel || "按单元")}</span>`
+      : `<span class="ok">${rawVocab.length}</span> 词库全词`;
+    const count = activeVocab.length;
+    $("status").innerHTML = `当前 <span class="ok">${count}</span> 词 · ${mode==="order"?"顺序":"随机"}模式 · ${scope}`;
+  }
+  // transient hint in status bar (auto-restores current status after 2.5s)
+  let _flashTimer = null;
+  function flashStatus(msg){
+    const s = $("status");
+    if(!s) return;
+    if(_flashTimer){ clearTimeout(_flashTimer); _flashTimer = null; }
+    s.innerHTML = `<span style="color:#d97706">${msg}</span>`;
+    _flashTimer = setTimeout(()=>{ _flashTimer = null; updateStatus(); }, 2500);
+  }
+
+  // ===== Wire up =====
+  $("loadBtn").addEventListener("click", ()=> $("fileInput").click());
+  $("dropZone").addEventListener("click", ()=> $("fileInput").click());
+  $("fileInput").addEventListener("change", e=>{
+    if(e.target.files[0]) handleFile(e.target.files[0]);
+    e.target.value = "";
+  });
+
+  // drag-drop
+  ["dragover","dragenter"].forEach(ev=>{
+    $("dropZone").addEventListener(ev, e=>{ e.preventDefault(); $("dropZone").classList.add("dragover"); });
+    document.body.addEventListener(ev, e=> e.preventDefault());
+  });
+  ["dragleave","drop"].forEach(ev=>{
+    $("dropZone").addEventListener(ev, e=>{ e.preventDefault(); $("dropZone").classList.remove("dragover"); });
+  });
+  document.body.addEventListener("drop", e=>{
+    e.preventDefault();
+    if($("overlay").style.display!=="none" && e.dataTransfer.files[0]){
+      handleFile(e.dataTransfer.files[0]);
+    }
+  });
+
+  $("modeToggle").addEventListener("click", e=>{
+    const b = e.target.closest("button");
+    if(!b || !activeVocab.length) return;
+    setMode(b.dataset.mode);
+    updateStatus();
+    next();
+  });
+  $("reloadBtn").addEventListener("click", ()=>{
+    setMode("random");
+    updateStatus();
+    next();
+  });
+
+  // ===== Search box events =====
+  const searchInput = $("searchInput");
+  searchInput.addEventListener("input", e=>{
+    const q = e.target.value;
+    if(!q || !q.trim() || !activeVocab.length){ closeSearch(); return; }
+    const res = searchVocab(q);
+    renderSearchResults(res, q.trim());
+  });
+  searchInput.addEventListener("keydown", e=>{
+    if(e.key==="ArrowDown"){ e.preventDefault(); moveSearchActive(1); }
+    else if(e.key==="ArrowUp"){ e.preventDefault(); moveSearchActive(-1); }
+    else if(e.key==="Enter"){
+      e.preventDefault();
+      if(searchResultsCache.length && searchActiveIdx>=0){
+        jumpToVidx(searchResultsCache[searchActiveIdx]);
+      }
+    } else if(e.key==="Escape"){ closeSearch(); searchInput.blur(); }
+  });
+  // click item to jump
+  $("searchResults").addEventListener("click", e=>{
+    const it = e.target.closest(".search-item");
+    if(it){
+      const vidx = parseInt(it.dataset.vidx, 10);
+      if(!isNaN(vidx)) jumpToVidx(vidx);
+    }
+  });
+  // hover to set active
+  $("searchResults").addEventListener("mouseover", e=>{
+    const it = e.target.closest(".search-item");
+    if(!it) return;
+    const n = parseInt(it.dataset.n, 10);
+    if(isNaN(n)) return;
+    searchActiveIdx = n;
+    $("searchResults").querySelectorAll(".search-item").forEach((el,i)=> el.classList.toggle("active", i===n));
+  });
+  // close dropdown when clicking outside
+  document.addEventListener("click", e=>{
+    if(!e.target.closest(".search-wrap")) closeSearch();
+  });
+
+  // ===== Unit filter controls =====
+  initGradeSelect();
+  refreshUnitSelect();
+  // toggle switch
+  $("unitFilterToggle").addEventListener("click", ()=>{
+    if(!rawVocab.length){ // no vocab loaded → ignore
+      $("unitFilterToggle").classList.remove("on");
+      return;
+    }
+    filterByUnit = !filterByUnit;
+    localStorage.setItem(LS_LAST_FILTER, filterByUnit ? "1" : "0");
+    $("unitFilterToggle").classList.toggle("on", filterByUnit);
+    if(filterByUnit){
+      // auto-load current selected unit if not loaded yet
+      applyUnitSelection(true);  // async, will rebuildActiveVocab after load
+    } else {
+      currentUnitData = null;
+      currentUnitLabel = "";
+      rebuildActiveVocab();
+    }
+  });
+  // grade change → refresh unit options → if filter on, reload unit
+  $("gradeSelect").addEventListener("change", ()=>{
+    localStorage.setItem(LS_LAST_GRADE, $("gradeSelect").value);
+    localStorage.setItem(LS_LAST_UNIT, "0");
+    refreshUnitSelect();
+    if(filterByUnit) applyUnitSelection(true);
+  });
+  // unit change → if filter on, reload unit
+  $("unitSelect").addEventListener("change", ()=>{
+    localStorage.setItem(LS_LAST_UNIT, $("unitSelect").value);
+    if(filterByUnit) applyUnitSelection(true);
+  });
+  $("unitSelect").addEventListener("change", ()=>{
+    if(filterByUnit) applyUnitSelection(true);
+  });
+
+  // load unit file for current grade+unit selection, then rebuild active vocab
+  let _unitLoading = false;
+  async function applyUnitSelection(rebuild){
+    if(_unitLoading) return;
+    const gSel = $("gradeSelect");
+    const uSel = $("unitSelect");
+    const cat = CATALOG.find(c=>c.id===gSel.value);
+    if(!cat) return;
+    const uIdx = parseInt(uSel.value, 10) || 0;
+    const unit = cat.units[uIdx];
+    if(!unit) return;
+    const filename = unit.f + ".json";
+    const label = `${cat.label} · ${unit.n}`;
+    if(currentUnitFile===filename && currentUnitData){
+      currentUnitLabel = label;
+      if(rebuild) rebuildActiveVocab();
+      return;
+    }
+    _unitLoading = true;
+    uSel.disabled = true;
+    gSel.disabled = true;
+    // show loading hint in status
+    const prevStatus = $("status").innerHTML;
+    $("status").innerHTML = `⏳ 正在加载单元词汇 <span class="scope-tag">${escapeHtml(label)}</span> …`;
+    const data = await loadUnitFile(filename);
+    uSel.disabled = !rawVocab.length;
+    gSel.disabled = !rawVocab.length;
+    _unitLoading = false;
+    if(!data || !Array.isArray(data) || !data.length){
+      $("status").innerHTML = `❌ 单元加载失败: ${escapeHtml(filename)}`;
+      // turn off filter on failure to keep page usable
+      filterByUnit = false;
+      $("unitFilterToggle").classList.remove("on");
+      currentUnitData = null;
+      currentUnitLabel = "";
+      rebuildActiveVocab();
+      return;
+    }
+    currentUnitFile = filename;
+    currentUnitData = data;
+    currentUnitLabel = label;
+    if(rebuild) rebuildActiveVocab();
+  }
+  $("prevBtn").addEventListener("click", prev);
+  $("nextBtn").addEventListener("click", next);
+  $("speakBtn").addEventListener("click", e=>{
+    const w = e.currentTarget.dataset.word;
+    if(w) speak(w, "us");
+  });
+  // click phonetic / any [data-speak] to pronounce (carries accent: uk=英RP, us=美)
+  document.addEventListener("click", e=>{
+    const node = e.target.closest("[data-speak]");
+    if(node && node.dataset.speak){ speak(node.dataset.speak, node.dataset.accent); }
+  });
+
+  // keyboard nav
+  document.addEventListener("keydown", e=>{
+    if(!activeVocab.length) return;
+    if(e.target.tagName==="INPUT" || e.target.tagName==="TEXTAREA" || e.target.tagName==="SELECT") return;
+    if(e.key==="ArrowLeft") prev();
+    else if(e.key==="ArrowRight") next();
+  });
+
+  // click a left/right list item → preview that word in center column.
+  // Works for any word in the whole vocab (in or out of current unit).
+  // prev/next still navigate within the filtered scope (exits preview).
+  function previewWord(vidx){
+    if(vidx==null || vidx<0 || vidx>=rawVocab.length) return;
+    previewIdx = vidx;
+    showCurrent();
+  }
+
+  // delegate list clicks
+  function delegateClick(containerId){
+    $(containerId).addEventListener("click", e=>{
+      const item = e.target.closest(".word-list-item");
+      if(!item || item.dataset.vidx===undefined) return;
+      const vidx = parseInt(item.dataset.vidx,10);
+      if(isNaN(vidx)) return;
+      previewWord(vidx);
+    });
+  }
+  delegateClick("leftList");
+  delegateClick("rightList");
+
+  // ===== Boot: restore last session from cache (IndexedDB + localStorage) =====
+  // If a vocab file was cached on a previous load, restore it automatically
+  // instead of showing the "select file" overlay. Unit filter state is restored too.
+  restoreFromCache().then(restored=>{
+    if(!restored){
+      // no cache or restore failed → show the load overlay as before
+      $("overlay").style.display = "flex";
+    }
+  });
+
+})();
+</script>
+</body>
+</html>
