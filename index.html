@@ -509,6 +509,24 @@
     text-transform: uppercase; letter-spacing: .5px;
     margin-bottom: -6px;
   }
+  .drawer-footer {
+    margin-top: auto;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+  }
+  .drawer-footer .footer-text {
+    font-size: 13px; color: var(--text); margin: 6px 0 10px;
+  }
+  .wx-img {
+    width: 100%; max-width: 180px;
+    border-radius: 8px; border: 1px solid var(--border);
+    display: block; margin: 0 auto;
+  }
+  .img-fallback {
+    display: none; font-size: 12px; color: var(--text-muted);
+    padding: 10px; background: #f8fafc; border-radius: 6px;
+  }
 
   /* ===== Desktop (min-width: 981px): 三栏模式 ===== */
   @media (min-width: 981px) {
@@ -528,6 +546,7 @@
 
     .drawer-backdrop { display: none !important; }
     .settings-btn { display: none !important; }
+    .drawer-footer { display: none !important; }
     .drawer {
       position: static;
       transform: none;
@@ -689,6 +708,7 @@
         <div class="drawer-section-label">词库</div>
         <input type="file" id="fileInput" accept=".json" style="display:none">
         <button class="btn" id="loadBtn">📁 加载词库</button>
+        <button class="btn secondary" id="clearCacheBtn" style="background:#fee2e2;color:#dc2626;border-color:#dc2626;">🗑️ 清空本地词库缓存</button>
         <div class="drawer-section-label">播放模式</div>
         <div class="mode-toggle" id="modeToggle">
           <button data-mode="order" class="active">顺序</button>
@@ -707,6 +727,12 @@
           <input type="text" id="searchInput" class="search-input" placeholder="🔍 搜索单词..." disabled autocomplete="off">
           <div class="search-results" id="searchResults" hidden></div>
         </div>
+      </div>
+      <div class="drawer-footer">
+        <div class="drawer-section-label">完整词库</div>
+        <p class="footer-text">获取完整词库请添加微信：</p>
+        <img class="wx-img" src="https://gitee.com/han-huilu/image/raw/master/wx.png" alt="微信二维码" onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
+        <p class="img-fallback">图片加载失败，请访问 Gitee 仓库 han-huilu/image 查看</p>
       </div>
     </aside>
     <div class="status" id="status">未加载词库</div>
@@ -830,6 +856,17 @@
         req.onerror = ()=> reject(req.error);
       });
     }catch(e){ return null; }
+  }
+  async function idbClearAll(){
+    try {
+      const db = await openDB();
+      return new Promise((resolve, reject)=>{
+        const tx = db.transaction(IDB_STORE, "readwrite");
+        tx.objectStore(IDB_STORE).clear();
+        tx.oncomplete = ()=> resolve();
+        tx.onerror = ()=> reject(tx.error);
+      });
+    }catch(e){}
   }
 
   // localStorage keys for session restore
@@ -1170,6 +1207,31 @@
     };
     reader.onerror = ()=> alert("读取文件失败");
     reader.readAsText(file, "utf-8");
+  }
+
+  const DEFAULT_VOCAB_URL  = "https://cdn.jsdelivr.net/gh/hhl760417/english-vocabulary@master/json_original/json-full/CET4.json";
+  const DEFAULT_VOCAB_NAME = "CET4.json";
+
+  async function loadDefaultVocab(){
+    try {
+      flashStatus("⏳ 正在加载默认词库 CET4.json …");
+      const resp = await fetch(DEFAULT_VOCAB_URL, { cache: "no-store" });
+      if(!resp.ok) throw new Error("HTTP " + resp.status);
+      const text = await resp.text();
+      const data = JSON.parse(text);
+      if(!Array.isArray(data)) throw new Error("词库根节点不是数组");
+      // cache to IndexedDB so next reload is instant
+      await idbPut(DEFAULT_VOCAB_NAME, { data: text, size: text.length, ts: Date.now() });
+      localStorage.setItem(LS_LAST_VOCAB, DEFAULT_VOCAB_NAME);
+      loadVocabData(data, DEFAULT_VOCAB_NAME);
+      await restoreUnitFilterState();
+      flashStatus(`已加载默认词库「CET4.json」（${data.length} 词）`);
+      return true;
+    } catch(e){
+      console.warn("loadDefaultVocab failed:", e.message);
+      flashStatus("⚠️ 默认词库加载失败，请手动加载本地词库文件");
+      return false;
+    }
   }
 
   async function restoreFromCache(){
@@ -1597,6 +1659,38 @@
 
   // ===== Wire up =====
   $("loadBtn").addEventListener("click", ()=> $("fileInput").click());
+  $("clearCacheBtn").addEventListener("click", async ()=>{
+    if(!confirm("确定清空本地词库缓存？\n（将删除 IndexedDB 中所有缓存的词库文件 + 会话状态，下次打开会重新从 Gitee 加载默认词库）")) return;
+    await idbClearAll();
+    localStorage.removeItem(LS_LAST_VOCAB);
+    localStorage.removeItem(LS_LAST_GRADE);
+    localStorage.removeItem(LS_LAST_UNIT);
+    localStorage.removeItem(LS_LAST_FILTER);
+    // reset unit filter state keys too
+    try { Object.keys(localStorage).filter(k=>k.startsWith("pep_unit:")).forEach(k=>localStorage.removeItem(k)); }catch(e){}
+    // reset UI
+    rawVocab = [];
+    activeVocab = [];
+    orderList = [];
+    pos = -1;
+    previewIdx = -1;
+    filterByUnit = false;
+    currentUnitData = null;
+    $("unitFilterToggle").classList.remove("on");
+    $("searchInput").disabled = true;
+    $("gradeSelect").disabled = true;
+    $("unitSelect").disabled = true;
+    $("reloadBtn").disabled = true;
+    $("prevBtn").disabled = true;
+    $("nextBtn").disabled = true;
+    $("wordDisplay").textContent = "—";
+    $("details").innerHTML = `<div class="empty"><div class="big">📖</div>加载词库并选择单词后，此处显示详细信息</div>`;
+    $("loadBtn").textContent = "📁 加载词库";
+    closeDrawer();
+    // show overlay for manual load
+    $("overlay").style.display = "flex";
+    flashStatus("已清空本地词库缓存");
+  });
   $("dropZone").addEventListener("click", ()=> $("fileInput").click());
   $("fileInput").addEventListener("change", e=>{
     if(e.target.files[0]) handleFile(e.target.files[0]);
@@ -1866,9 +1960,11 @@
     });
   });
 
-  // ===== Boot =====
-  restoreFromCache().then(restored=>{
-    if(!restored){
+  // ===== Boot: cache → default Gitee vocab → manual overlay =====
+  restoreFromCache().then(async restored=>{
+    if(restored) return;
+    const ok = await loadDefaultVocab();
+    if(!ok){
       $("overlay").style.display = "flex";
     }
   });
